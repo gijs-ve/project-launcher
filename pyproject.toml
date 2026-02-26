@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project-launcher"
+version = "0.1.0"
+dependencies = ["click>=8.0"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+project-launcher = "project_launcher.cli:main"

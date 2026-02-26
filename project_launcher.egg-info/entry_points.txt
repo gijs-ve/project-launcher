@@ -1,0 +1,2 @@
+[console_scripts]
+project-launcher = project_launcher.cli:main
