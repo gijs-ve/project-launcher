@@ -2,13 +2,34 @@
   "name": "launch",
   "version": "1.0.0",
   "private": true,
+  "main": "electron-dist/main.js",
   "scripts": {
     "dev": "concurrently --names server,client --prefix-colors cyan,magenta \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "build": "npm run build --prefix client && npm run build --prefix server",
-    "start": "npm run start --prefix server"
+    "start": "npm run start --prefix server",
+    "electron:compile": "tsc --project electron/tsconfig.json",
+    "electron:dev": "concurrently --names server,vite,electron --prefix-colors cyan,magenta,yellow \"npm run dev --prefix server\" \"npm run dev --prefix client\" \"wait-on http://localhost:5173 tcp:4000 && electron .\"",
+    "electron:build": "npm run build && npm run electron:compile && electron-builder --config electron-builder.config.js",
+    "electron:build:mac": "npm run electron:build -- --mac",
+    "postinstall": "cd server && npm install"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "node-pty": "^1.0.0",
+    "ws": "^8.18.1"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.5",
+    "@types/ws": "^8.5.14",
+    "concurrently": "^9.1.2",
+    "electron": "^33.4.0",
+    "electron-builder": "^25.1.8",
+    "@electron/rebuild": "^3.7.1",
+    "typescript": "^5.8.2",
+    "wait-on": "^8.0.3"
   },
   "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

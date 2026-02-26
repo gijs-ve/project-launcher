@@ -1,0 +1,31 @@
+directories:
+  output: dist-electron
+  buildResources: build
+appId: com.gijsbert.launch
+productName: Launch
+files:
+  - filter:
+      - electron-dist/**
+      - server/dist/**
+      - node_modules/**
+      - package.json
+      - '!node_modules/.cache'
+      - '!**/*.map'
+extraResources:
+  - from: client/dist
+    to: client
+  - from: launch.config.json
+    to: launch.config.json
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+npmRebuild: true
+electronVersion: 33.4.11

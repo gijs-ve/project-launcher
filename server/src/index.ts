@@ -1,5 +1,6 @@
 import express from 'express';
 import http from 'http';
+import path from 'path';
 import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
 import configRouter from './routes/config.js';
@@ -14,14 +15,38 @@ const PORT = 4000;
 // ---------------------------------------------------------------------------
 const app = express();
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+// Allow requests from the Vite dev server and the Electron renderer
+const allowedOrigins = [
+  'http://localhost:5173',
+  `http://localhost:${PORT}`,
+];
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow requests with no origin (e.g. same-origin requests, Electron file://)
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error(`CORS blocked: ${origin}`));
+  },
+}));
 app.use(express.json());
+
+// In packaged Electron builds, serve the built React client as static files
+if (process.env.ELECTRON_STATIC_DIR) {
+  app.use(express.static(process.env.ELECTRON_STATIC_DIR));
+}
 
 app.use('/api/config', configRouter);
 app.use('/api/projects', processesRouter);
 
 // Health check
 app.get('/health', (_req, res) => res.json({ ok: true }));
+
+// SPA fallback: serve index.html for any unknown route so React Router works
+// Only active in packaged Electron mode where ELECTRON_STATIC_DIR is set
+if (process.env.ELECTRON_STATIC_DIR) {
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(process.env.ELECTRON_STATIC_DIR as string, 'index.html'));
+  });
+}
 
 // ---------------------------------------------------------------------------
 // HTTP + WebSocket server (shared port)

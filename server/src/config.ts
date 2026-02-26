@@ -2,8 +2,17 @@ import fs from 'fs';
 import path from 'path';
 import { Config } from './types.js';
 
-// Config file lives two levels up: /Code/launch/launch.config.json
-const CONFIG_PATH = path.resolve(__dirname, '..', '..', 'launch.config.json');
+// Config file resolution:
+//   1. LAUNCH_CONFIG_PATH env var (set by Electron main in packaged builds)
+//   2. Default: two levels up from server/dist/ → project root
+function resolveConfigPath(): string {
+  if (process.env.LAUNCH_CONFIG_PATH) {
+    return process.env.LAUNCH_CONFIG_PATH;
+  }
+  return path.resolve(__dirname, '..', '..', 'launch.config.json');
+}
+
+const CONFIG_PATH = resolveConfigPath();
 
 export function readConfig(): Config {
   try {
