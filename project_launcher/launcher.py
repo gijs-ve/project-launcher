@@ -1,4 +1,5 @@
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -33,7 +34,7 @@ def open_terminal(project_config: dict) -> None:
             ("gnome-terminal", ["--working-directory", path]),
             ("konsole", ["--workdir", path]),
             ("xfce4-terminal", ["--working-directory", path]),
-            ("xterm", ["-e", f"cd {path!r} && $SHELL"]),
+            ("xterm", ["-e", f"cd {shlex.quote(path)} && $SHELL"]),
         ]
         for term, args in terminals:
             try:
@@ -43,6 +44,6 @@ def open_terminal(project_config: dict) -> None:
                 continue
         raise RuntimeError("No supported terminal emulator found.")
     elif sys.platform == "win32":
-        subprocess.Popen(["cmd.exe", "/K", f"cd /d {path}"])
+        subprocess.Popen(["cmd.exe"], cwd=path)
     else:
         raise RuntimeError(f"Unsupported platform: {sys.platform}")
