@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useConfig } from '../context/ConfigContext';
 import { useProcesses } from '../context/ProcessesContext';
 import { useView } from '../context/ViewContext';
+import { useShortcuts } from '../context/ShortcutsContext';
 import { ProjectCard } from '../components/ProjectCard';
 import { LogPanel } from '../components/LogPanel';
 
@@ -9,7 +10,23 @@ export function ProjectsView() {
   const { config, loading } = useConfig();
   const { statuses } = useProcesses();
   const { navigateToProject } = useView();
+  const { keyToAction } = useShortcuts();
   const [openLogId, setOpenLogId] = useState<string | null>(null);
+
+  // Keyboard shortcuts — fire when not inside an input
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      const action = keyToAction[e.key];
+      if (!action?.startsWith('navigate-')) return;
+      const idx = parseInt(action.slice('navigate-'.length), 10);
+      const project = config.projects[idx];
+      if (project) navigateToProject(project.id);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [keyToAction, config.projects, navigateToProject]);
 
   if (loading) {
     return (
@@ -31,12 +48,13 @@ export function ProjectsView() {
           </p>
         ) : (
           <div className="flex flex-wrap gap-4">
-            {config.projects.map((project) => {
+            {config.projects.map((project, idx) => {
               const status = statuses[project.id] ?? 'stopped';
               return (
-                <ProjectCard
+              <ProjectCard
                   key={project.id}
                   project={project}
+                  index={idx}
                   status={status}
                   isLogOpen={openLogId === project.id}
                   onToggleLogs={() =>

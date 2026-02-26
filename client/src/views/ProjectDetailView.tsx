@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useView } from '../context/ViewContext';
 import { useConfig } from '../context/ConfigContext';
 import { useProcesses } from '../context/ProcessesContext';
@@ -10,6 +10,15 @@ export function ProjectDetailView() {
   const { config } = useConfig();
   const { statuses, startProject, stopProject, restartProject } = useProcesses();
   const [logsOpen, setLogsOpen] = useState(false);
+
+  // Escape key navigates back to the project list
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') navigateBack();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [navigateBack]);
 
   const project = config.projects.find((p) => p.id === selectedProjectId);
 

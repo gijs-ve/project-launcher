@@ -1,5 +1,6 @@
 import { useView } from './context/ViewContext';
 import { useConfig } from './context/ConfigContext';
+import { ShortcutsProvider } from './context/ShortcutsContext';
 import { NavBar } from './components/NavBar';
 import { Toast } from './components/Toast';
 import { ProjectsView } from './views/ProjectsView';
@@ -8,7 +9,7 @@ import { LinksView } from './views/LinksView';
 import { SettingsView } from './views/SettingsView';
 import { useState, useEffect } from 'react';
 
-function AppShell() {
+function AppShellInner() {
   const { activeView } = useView();
   const { error } = useConfig();
   const [toast, setToast] = useState<string | null>(null);
@@ -33,4 +34,10 @@ function AppShell() {
   );
 }
 
-export default AppShell;
+export default function AppShell() {
+  return (
+    <ShortcutsProvider>
+      <AppShellInner />
+    </ShortcutsProvider>
+  );
+}

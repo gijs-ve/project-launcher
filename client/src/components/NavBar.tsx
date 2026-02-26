@@ -1,4 +1,4 @@
-import { useView, View } from '../context/ViewContext';
+import { useView, View, SettingsTab } from '../context/ViewContext';
 import { useConfig } from '../context/ConfigContext';
 
 const NAV_ITEMS: { view: View; label: string }[] = [
@@ -7,23 +7,33 @@ const NAV_ITEMS: { view: View; label: string }[] = [
   { view: 'settings', label: 'Settings' },
 ];
 
+const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
+  projects: 'Projects',
+  links: 'Links',
+  shortcuts: 'Shortcuts',
+};
+
 export function NavBar() {
-  const { activeView, setActiveView, selectedProjectId, navigateBack } = useView();
+  const { activeView, setActiveView, selectedProjectId, navigateBack, settingsTab, setSettingsTab } = useView();
   const { config } = useConfig();
 
   const selectedProject = selectedProjectId
     ? config.projects.find((p) => p.id === selectedProjectId)
     : null;
 
+  const showProjectBreadcrumb = activeView === 'project-detail' && selectedProject;
+  const showSettingsBreadcrumb = activeView === 'settings' && settingsTab !== null;
+
   return (
     <header className="flex items-center justify-between h-12 px-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
-      {/* Brand */}
+      {/* Brand + breadcrumb */}
       <div className="flex items-center gap-2">
         <span className="text-base font-mono font-medium text-zinc-100 tracking-tight">
           🚀 Launch
         </span>
-        {/* Breadcrumb when inside project detail */}
-        {activeView === 'project-detail' && selectedProject && (
+
+        {/* Breadcrumb: project detail */}
+        {showProjectBreadcrumb && (
           <>
             <span className="text-zinc-600 font-mono text-sm">/</span>
             <button
@@ -34,16 +44,33 @@ export function NavBar() {
             </button>
             <span className="text-zinc-600 font-mono text-sm">/</span>
             <span
-              className="font-mono text-sm text-zinc-100 font-medium"
+              className="font-mono text-sm font-medium"
               style={{ color: selectedProject.color }}
             >
               {selectedProject.name}
             </span>
           </>
         )}
+
+        {/* Breadcrumb: settings sub-section */}
+        {showSettingsBreadcrumb && (
+          <>
+            <span className="text-zinc-600 font-mono text-sm">/</span>
+            <button
+              onClick={() => setSettingsTab(null)}
+              className="font-mono text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
+            >
+              Settings
+            </button>
+            <span className="text-zinc-600 font-mono text-sm">/</span>
+            <span className="font-mono text-sm text-zinc-100 font-medium">
+              {SETTINGS_TAB_LABELS[settingsTab]}
+            </span>
+          </>
+        )}
       </div>
 
-      {/* Navigation — hide detail pseudo-view from tabs */}
+      {/* Navigation tabs */}
       <nav className="flex items-center gap-1">
         {NAV_ITEMS.map(({ view, label }) => {
           const active = activeView === view || (activeView === 'project-detail' && view === 'projects');

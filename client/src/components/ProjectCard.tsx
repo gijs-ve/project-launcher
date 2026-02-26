@@ -5,13 +5,14 @@ import { useProcesses } from '../context/ProcessesContext';
 
 interface ProjectCardProps {
   project: Project;
+  index: number;
   status: ProjectStatus;
   isLogOpen: boolean;
   onToggleLogs: () => void;
   onNavigate?: () => void;
 }
 
-export function ProjectCard({ project, status, isLogOpen, onToggleLogs, onNavigate }: ProjectCardProps) {
+export function ProjectCard({ project, index, status, isLogOpen, onToggleLogs, onNavigate }: ProjectCardProps) {
   const { startProject, stopProject, restartProject } = useProcesses();
   const [linksOpen, setLinksOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -45,9 +46,15 @@ export function ProjectCard({ project, status, isLogOpen, onToggleLogs, onNaviga
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="font-mono font-medium text-zinc-100 text-sm leading-tight">{project.name}</p>
-          <p className="font-mono text-xs text-zinc-500 mt-0.5 truncate max-w-[200px]">{shortPath}</p>
+        <div className="flex items-center gap-2">
+          {/* 1-based index badge */}
+          <span className="font-mono text-xs text-zinc-600 bg-zinc-800 rounded px-1.5 py-0.5 shrink-0">
+            {index + 1}
+          </span>
+          <div>
+            <p className="font-mono font-medium text-zinc-100 text-sm leading-tight">{project.name}</p>
+            <p className="font-mono text-xs text-zinc-500 mt-0.5 truncate max-w-[200px]">{shortPath}</p>
+          </div>
         </div>
         <StatusBadge status={status} />
       </div>

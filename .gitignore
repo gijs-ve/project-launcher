@@ -44,6 +44,7 @@ logs
 **/dist
 **/node_modules
 **/dist-electron
+electron-dist/
 bower_components
 
 *.sublime*
