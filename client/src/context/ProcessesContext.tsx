@@ -6,7 +6,7 @@ import {
   useRef,
   ReactNode,
 } from 'react';
-import { ProjectStatus } from '../types';
+import { ProjectStatus, ClientMessage } from '../types';
 import { useWebSocket } from '../hooks/useWebSocket';
 
 interface ProcessesContextValue {
@@ -62,20 +62,41 @@ export function ProcessesProvider({ children }: { children: ReactNode }) {
     setStatuses(incoming);
   }, []);
 
+  // Track active subscriptions so we can re-subscribe after reconnect.
+  const activeSubsRef  = useRef<Set<string>>(new Set());
+  // A ref to the send function so onReconnect can use it before send is declared.
+  const sendRef = useRef<((msg: ClientMessage) => void) | null>(null);
+
+  const handleReconnect = useCallback(() => {
+    for (const id of activeSubsRef.current) {
+      sendRef.current?.({ type: 'subscribe-output', projectId: id });
+    }
+  }, []);
+
   const { send } = useWebSocket({
     onStatusUpdate: handleStatusUpdate,
     onOutput: handleOutput,
     onBufferReplay: handleBufferReplay,
     onInitialState: handleInitialState,
+    onReconnect: handleReconnect,
   });
 
+  // Keep the ref in sync so handleReconnect always has the latest send
+  sendRef.current = send;
+
   const subscribeOutput = useCallback(
-    (projectId: string) => send({ type: 'subscribe-output', projectId }),
+    (projectId: string) => {
+      activeSubsRef.current.add(projectId);
+      send({ type: 'subscribe-output', projectId });
+    },
     [send],
   );
 
   const unsubscribeOutput = useCallback(
-    (projectId: string) => send({ type: 'unsubscribe-output', projectId }),
+    (projectId: string) => {
+      activeSubsRef.current.delete(projectId);
+      send({ type: 'unsubscribe-output', projectId });
+    },
     [send],
   );
 

@@ -11,6 +11,8 @@ interface UseWebSocketOptions {
   onOutput: OutputHandler;
   onBufferReplay: ReplayHandler;
   onInitialState: InitialStateHandler;
+  /** Called every time a (re)connection opens — use to re-subscribe */
+  onReconnect?: () => void;
 }
 
 const RECONNECT_DELAY_MS = 1500;
@@ -20,16 +22,17 @@ export function useWebSocket({
   onOutput,
   onBufferReplay,
   onInitialState,
+  onReconnect,
 }: UseWebSocketOptions) {
   const wsRef        = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const destroyedRef = useRef(false);
 
   // Keep callbacks in refs so reconnect closures always call the latest version
-  const handlersRef = useRef({ onStatusUpdate, onOutput, onBufferReplay, onInitialState });
+  const handlersRef = useRef({ onStatusUpdate, onOutput, onBufferReplay, onInitialState, onReconnect });
   useEffect(() => {
-    handlersRef.current = { onStatusUpdate, onOutput, onBufferReplay, onInitialState };
-  }, [onStatusUpdate, onOutput, onBufferReplay, onInitialState]);
+    handlersRef.current = { onStatusUpdate, onOutput, onBufferReplay, onInitialState, onReconnect };
+  }, [onStatusUpdate, onOutput, onBufferReplay, onInitialState, onReconnect]);
 
   // Stable send — works even while reconnecting (messages are dropped, which is
   // fine for stdin; status/subscribe messages will be re-sent after reconnect)
@@ -55,6 +58,7 @@ export function useWebSocket({
           clearTimeout(reconnectRef.current);
           reconnectRef.current = null;
         }
+        handlersRef.current.onReconnect?.();
       };
 
       ws.onmessage = (event) => {
