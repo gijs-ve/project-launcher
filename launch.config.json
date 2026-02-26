@@ -1,0 +1,100 @@
+{
+  "projects": [
+    {
+      "id": "slo-fe",
+      "name": "SLO-FE",
+      "cwd": "/Users/gijsbert/Code/SLO-FE",
+      "command": "pnpm dev -p 3001",
+      "url": "http://localhost:3001",
+      "color": "#3B82F6",
+      "links": [
+        {
+          "label": "Umbraco",
+          "url": "https://slo-tst-app-umbraco-01.azurewebsites.net/umbraco/",
+          "openMode": "browser"
+        },
+        {
+          "label": "Staging",
+          "url": "https://slo-tst-app-front-01.azurewebsites.net/",
+          "openMode": "browser"
+        }
+      ]
+    },
+    {
+      "id": "hhnk",
+      "name": "HHNK",
+      "cwd": "/Users/gijsbert/Code/HHNK",
+      "command": "pnpm dev -p 3002",
+      "url": "http://localhost:3002",
+      "color": "#10B981",
+      "links": [
+        {
+          "label": "Umbraco",
+          "url": "https://hhnk-tst-app-umbraco-01.azurewebsites.net/umbraco/",
+          "openMode": "browser"
+        },
+        {
+          "label": "Staging",
+          "url": "https://hhnk-tst-app-front-01.azurewebsites.net/",
+          "openMode": "browser"
+        }
+      ]
+    },
+    {
+      "id": "wbvn-fe",
+      "name": "WBVN-FE",
+      "cwd": "/Users/gijsbert/Code/WBVN-FE",
+      "command": "pnpm dev -p 3003",
+      "url": "http://localhost:3003",
+      "color": "#F59E0B",
+      "links": [
+        {
+          "label": "Umbraco",
+          "url": "https://wbrvn-tst-app-umbraco-01.azurewebsites.net/umbraco",
+          "openMode": "browser"
+        },
+        {
+          "label": "Staging",
+          "url": "https://wbrvn-tst-app-front-01.azurewebsites.net/",
+          "openMode": "browser"
+        }
+      ]
+    },
+    {
+      "id": "soon-fe",
+      "name": "SOON-FE",
+      "cwd": "/Users/gijsbert/Code/SOON-FE",
+      "command": "pnpm dev -p 3004",
+      "url": "http://localhost:3004",
+      "color": "#8B5CF6",
+      "links": [
+        {
+          "label": "Umbraco",
+          "url": "https://soon-test-umbraco01.azurewebsites.net/umbraco",
+          "openMode": "browser"
+        },
+        {
+          "label": "Staging",
+          "url": "https://soon-test-front01.azurewebsites.net/",
+          "openMode": "browser"
+        }
+      ]
+    },
+    {
+      "id": "antonius-fe",
+      "name": "Antonius-FE",
+      "cwd": "/Users/gijsbert/Code/Antonius-FE",
+      "command": "pnpm dev -p 3005",
+      "url": "http://localhost:3005",
+      "color": "#3B82F6",
+      "links": [
+        {
+          "label": "Umbraco",
+          "url": "https://antoniussneek-test-umbraco01.azurewebsites.net/",
+          "openMode": "browser"
+        }
+      ]
+    }
+  ],
+  "links": []
+}
