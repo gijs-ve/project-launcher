@@ -42,19 +42,35 @@ function ensureConfig(): void {
 
 // ---------------------------------------------------------------------------
 // Start the embedded Express/WS server
+// Only called in packaged builds. In dev mode the server is started externally
+// by the `electron:dev` concurrently script (npm run dev --prefix server).
 // ---------------------------------------------------------------------------
 function startServer(): void {
   ensureConfig();
 
-  if (!isDev) {
-    // Tell Express to serve the built React client as static files
-    process.env.ELECTRON_STATIC_DIR = path.join(process.resourcesPath, 'client');
-  }
+  // Tell Express where the built React client lives so it can serve it
+  process.env.ELECTRON_STATIC_DIR = path.join(process.resourcesPath, 'client');
 
-  // In dev use the compiled server output; in packaged it lives next to us
-  const serverEntryDev = path.resolve(__dirname, '..', 'server', 'dist', 'index.js');
-  const serverEntryProd = path.join(__dirname, '..', 'server', 'dist', 'index.js');
-  const serverEntry = isDev ? serverEntryDev : serverEntryProd;
+  // node-pty unpacked path: ensure spawn-helper is executable at runtime
+  // (belt-and-suspenders in case packaging didn't preserve the chmod bit)
+  try {
+    const prebuildsDir = path.join(
+      process.resourcesPath,
+      'app.asar.unpacked',
+      'node_modules',
+      'node-pty',
+      'prebuilds',
+    );
+    if (fs.existsSync(prebuildsDir)) {
+      for (const arch of fs.readdirSync(prebuildsDir)) {
+        const helper = path.join(prebuildsDir, arch, 'spawn-helper');
+        if (fs.existsSync(helper)) fs.chmodSync(helper, 0o755);
+      }
+    }
+  } catch { /* non-fatal */ }
+
+  // In packaged builds the server lives inside the asar next to electron-dist/
+  const serverEntry = path.join(__dirname, '..', 'server', 'dist', 'index.js');
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   require(serverEntry);
@@ -127,10 +143,13 @@ function createWindow(): void {
 // App lifecycle
 // ---------------------------------------------------------------------------
 app.whenReady().then(async () => {
-  startServer();
-
-  if (!isDev) {
-    // Wait for the embedded server before loading the renderer
+  if (isDev) {
+    // Dev: server is already started externally by `npm run dev --prefix server`.
+    // Just wait until it's answering before opening the window.
+    await waitForServer(`http://localhost:${PORT}/health`);
+  } else {
+    // Production: boot the embedded Express/WS server then wait for it.
+    startServer();
     await waitForServer(`http://localhost:${PORT}/health`);
   }
 

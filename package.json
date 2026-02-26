@@ -1,6 +1,8 @@
 {
   "name": "launch",
   "version": "1.0.0",
+  "description": "Desktop project launcher — start, stop and monitor dev projects from a native macOS app",
+  "author": "Gijsbert",
   "private": true,
   "main": "electron-dist/main.js",
   "scripts": {
