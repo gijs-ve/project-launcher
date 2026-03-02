@@ -10,10 +10,12 @@ interface ProjectCardProps {
   isLogOpen: boolean;
   onToggleLogs: () => void;
   onNavigate?: () => void;
+  /** When true, only the Stop button is rendered (card keeps its original size). */
+  compact?: boolean;
 }
 
-export function ProjectCard({ project, index, status, isLogOpen, onToggleLogs, onNavigate }: ProjectCardProps) {
-  const { startProject, stopProject, restartProject } = useProcesses();
+export function ProjectCard({ project, index, status, isLogOpen, onToggleLogs, onNavigate, compact = false }: ProjectCardProps) {
+  const { startProject, stopProject, restartProject, openInEditor } = useProcesses();
   const [linksOpen, setLinksOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -64,76 +66,109 @@ export function ProjectCard({ project, index, status, isLogOpen, onToggleLogs, o
 
       {/* Actions */}
       <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-        {canStart && (
-          <button
-            onClick={() => startProject(project.id)}
-            className="btn-primary"
-          >
-            Start
-          </button>
-        )}
-        {canStop && (
-          <button
-            onClick={() => stopProject(project.id)}
-            className="btn-danger"
-          >
-            Stop
-          </button>
-        )}
-        {canRestart && (
-          <button
-            onClick={() => restartProject(project.id)}
-            className="btn-secondary"
-          >
-            Restart
-          </button>
-        )}
-        {status === 'running' && project.url && (
-          <a
-            href={project.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary"
-          >
-            ↗ Open
-          </a>
-        )}
+        {compact ? (
+          // Compact mode: Stop + Links + Code
+          <>
+            {canStop && (
+              <button onClick={() => stopProject(project.id)} className="btn-danger">
+                Stop
+              </button>
+            )}
 
-        {/* Links dropdown */}
-        {hasLinks && (
-          <div ref={dropdownRef} className="relative">
-            <button
-              className="btn-secondary"
-              onClick={() => setLinksOpen((o) => !o)}
-            >
-              Links {linksOpen ? '▲' : '▼'}
-            </button>
-            {linksOpen && (
-              <div className="absolute bottom-full mb-1 left-0 z-50 min-w-[160px] bg-zinc-800 border border-zinc-700 rounded-md shadow-lg overflow-hidden">
-                {project.links!.map((lnk, i) => (
-                  <a
-                    key={i}
-                    href={lnk.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-zinc-200 hover:bg-zinc-700 transition-colors"
-                    onClick={() => setLinksOpen(false)}
-                  >
-                    <span className="text-zinc-500">↗</span>
-                    {lnk.label}
-                  </a>
-                ))}
+            {/* Links dropdown */}
+            {hasLinks && (
+              <div ref={dropdownRef} className="relative">
+                <button className="btn-secondary" onClick={() => setLinksOpen((o) => !o)}>
+                  Links {linksOpen ? '▲' : '▼'}
+                </button>
+                {linksOpen && (
+                  <div className="absolute bottom-full mb-1 left-0 z-50 min-w-[160px] bg-zinc-800 border border-zinc-700 rounded-md shadow-lg overflow-hidden">
+                    {project.links!.map((lnk, i) => (
+                      <a
+                        key={i}
+                        href={lnk.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-zinc-200 hover:bg-zinc-700 transition-colors"
+                        onClick={() => setLinksOpen(false)}
+                      >
+                        <span className="text-zinc-500">↗</span>
+                        {lnk.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
 
-        <button
-          onClick={onToggleLogs}
-          className={['btn-secondary ml-auto', isLogOpen ? 'text-zinc-100' : ''].join(' ')}
-        >
-          Logs {isLogOpen ? '▲' : '▼'}
-        </button>
+            <button onClick={() => openInEditor(project.id)} className="btn-secondary ml-auto" title="Open in editor">
+              Code
+            </button>
+          </>
+        ) : (
+          // Full mode
+          <>
+            {canStart && (
+              <button onClick={() => startProject(project.id)} className="btn-primary">
+                Start
+              </button>
+            )}
+            {canStop && (
+              <button onClick={() => stopProject(project.id)} className="btn-danger">
+                Stop
+              </button>
+            )}
+            {canRestart && (
+              <button onClick={() => restartProject(project.id)} className="btn-secondary">
+                Restart
+              </button>
+            )}
+            {status === 'running' && project.url && (
+              <a href={project.url} target="_blank" rel="noopener noreferrer" className="btn-secondary">
+                ↗ Open
+              </a>
+            )}
+
+            {/* Links dropdown */}
+            {hasLinks && (
+              <div ref={dropdownRef} className="relative">
+                <button className="btn-secondary" onClick={() => setLinksOpen((o) => !o)}>
+                  Links {linksOpen ? '▲' : '▼'}
+                </button>
+                {linksOpen && (
+                  <div className="absolute bottom-full mb-1 left-0 z-50 min-w-[160px] bg-zinc-800 border border-zinc-700 rounded-md shadow-lg overflow-hidden">
+                    {project.links!.map((lnk, i) => (
+                      <a
+                        key={i}
+                        href={lnk.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-zinc-200 hover:bg-zinc-700 transition-colors"
+                        onClick={() => setLinksOpen(false)}
+                      >
+                        <span className="text-zinc-500">↗</span>
+                        {lnk.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {canStop && (
+              <button
+                onClick={onToggleLogs}
+                className={['btn-secondary ml-auto', isLogOpen ? 'text-zinc-100' : ''].join(' ')}
+              >
+                Logs {isLogOpen ? '▲' : '▼'}
+              </button>
+            )}
+
+            <button onClick={() => openInEditor(project.id)} className={['btn-secondary', !canStop ? 'ml-auto' : ''].join(' ')} title="Open in editor">
+              Code
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

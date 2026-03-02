@@ -38,33 +38,91 @@ export function ProjectsView() {
 
   const openLogProject = config.projects.find((p) => p.id === openLogId);
 
+  // Split projects into active (running/starting) and inactive (stopped/errored)
+  const activeProjects   = config.projects.filter((p) => {
+    const s = statuses[p.id] ?? 'stopped';
+    return s === 'running' || s === 'starting';
+  });
+  const inactiveProjects = config.projects.filter((p) => {
+    const s = statuses[p.id] ?? 'stopped';
+    return s !== 'running' && s !== 'starting';
+  });
+
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* Project grid */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-8">
         {config.projects.length === 0 ? (
           <p className="font-mono text-zinc-500 text-sm">
             No projects yet. Add one in Settings.
           </p>
         ) : (
-          <div className="flex flex-wrap gap-4">
-            {config.projects.map((project, idx) => {
-              const status = statuses[project.id] ?? 'stopped';
-              return (
-              <ProjectCard
-                  key={project.id}
-                  project={project}
-                  index={idx}
-                  status={status}
-                  isLogOpen={openLogId === project.id}
-                  onToggleLogs={() =>
-                    setOpenLogId((prev) => (prev === project.id ? null : project.id))
-                  }
-                  onNavigate={() => navigateToProject(project.id)}
-                />
-              );
-            })}
-          </div>
+          <>
+            {/* ── All projects — inactive ones full, active ones compact ── */}
+            <div className="flex flex-wrap gap-4">
+              {/* Inactive projects (full card) */}
+              {inactiveProjects.map((project) => {
+                const idx    = config.projects.indexOf(project);
+                const status = statuses[project.id] ?? 'stopped';
+                return (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    index={idx}
+                    status={status}
+                    isLogOpen={openLogId === project.id}
+                    onToggleLogs={() =>
+                      setOpenLogId((prev) => (prev === project.id ? null : project.id))
+                    }
+                    onNavigate={() => navigateToProject(project.id)}
+                  />
+                );
+              })}
+              {/* Active projects (compact card — only Stop is clickable) */}
+              {activeProjects.map((project) => {
+                const idx    = config.projects.indexOf(project);
+                const status = statuses[project.id] ?? 'stopped';
+                return (
+                  <ProjectCard
+                    key={`compact-${project.id}`}
+                    project={project}
+                    index={idx}
+                    status={status}
+                    compact
+                    isLogOpen={false}
+                    onToggleLogs={() => {}}
+                    onNavigate={() => navigateToProject(project.id)}
+                  />
+                );
+              })}
+            </div>
+
+            {/* ── Running projects — full cards with all options ── */}
+            {activeProjects.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest">Running</p>
+                <div className="flex flex-wrap gap-4">
+                  {activeProjects.map((project) => {
+                    const idx    = config.projects.indexOf(project);
+                    const status = statuses[project.id] ?? 'stopped';
+                    return (
+                      <ProjectCard
+                        key={`full-${project.id}`}
+                        project={project}
+                        index={idx}
+                        status={status}
+                        isLogOpen={openLogId === project.id}
+                        onToggleLogs={() =>
+                          setOpenLogId((prev) => (prev === project.id ? null : project.id))
+                        }
+                        onNavigate={() => navigateToProject(project.id)}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

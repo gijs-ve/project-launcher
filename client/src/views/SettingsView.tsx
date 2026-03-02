@@ -2,6 +2,7 @@ import { useView, SettingsTab } from '../context/ViewContext';
 import { ProjectsSettings } from './settings/ProjectsSettings';
 import { LinksSettings } from './settings/LinksSettings';
 import { ShortcutsSettings } from './settings/ShortcutsSettings';
+import { GeneralSettings } from './settings/GeneralSettings';
 
 // ── hub tile ───────────────────────────────────────────────────────────────
 
@@ -40,6 +41,7 @@ export function SettingsView() {
   if (settingsTab === 'projects')  return <ProjectsSettings />;
   if (settingsTab === 'links')     return <LinksSettings />;
   if (settingsTab === 'shortcuts') return <ShortcutsSettings />;
+  if (settingsTab === 'general')   return <GeneralSettings />;
 
   // Hub / landing page
   const tiles: { tab: SettingsTab; icon: string; label: string; description: string }[] = [
@@ -61,6 +63,12 @@ export function SettingsView() {
       label: 'Shortcuts',
       description: 'Customise keyboard shortcuts. By default, pressing 1–9 opens the matching project.',
     },
+    {
+      tab: 'general',
+      icon: '⚙️',
+      label: 'General',
+      description: 'Set the editor command used by the Code button on each project card.',
+    },
   ];
 
   return (
@@ -69,7 +77,7 @@ export function SettingsView() {
         <h1 className="font-mono font-semibold text-zinc-100 text-base">Settings</h1>
         <p className="font-mono text-xs text-zinc-500 mt-1">Choose a section to configure.</p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl">
         {tiles.map((t) => (
           <HubTile
             key={t.tab}

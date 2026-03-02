@@ -8,7 +8,7 @@ import { LogPanel } from '../components/LogPanel';
 export function ProjectDetailView() {
   const { selectedProjectId, navigateBack } = useView();
   const { config } = useConfig();
-  const { statuses, startProject, stopProject, restartProject } = useProcesses();
+  const { statuses, startProject, stopProject, restartProject, openInEditor } = useProcesses();
   const [logsOpen, setLogsOpen] = useState(false);
 
   // Escape key navigates back to the project list
@@ -110,6 +110,13 @@ export function ProjectDetailView() {
                 onClick={() => setLogsOpen((o) => !o)}
               >
                 Logs {logsOpen ? '▲' : '▼'}
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={() => openInEditor(project.id)}
+                title="Open in editor"
+              >
+                Code
               </button>
             </div>
           </div>

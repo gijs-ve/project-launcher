@@ -65,11 +65,11 @@ module.exports = {
 
   mac: {
     category: 'public.app-category.developer-tools',
+    icon: 'build/icon.icns',
     target: [
       { target: 'dmg', arch: ['arm64', 'x64'] },
       { target: 'zip', arch: ['arm64', 'x64'] },
     ],
-    // Drop icon.icns here if you have one: build/icon.icns
   },
 
   // node-pty ships prebuilts for darwin-arm64/x64 that match Electron 33's Node ABI (115).

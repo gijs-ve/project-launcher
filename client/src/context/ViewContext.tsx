@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
 export type View = 'projects' | 'links' | 'settings' | 'project-detail';
-export type SettingsTab = 'projects' | 'links' | 'shortcuts';
+export type SettingsTab = 'projects' | 'links' | 'shortcuts' | 'general';
 
 interface ViewContextValue {
   activeView: View;

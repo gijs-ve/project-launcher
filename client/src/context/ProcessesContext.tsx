@@ -23,6 +23,7 @@ interface ProcessesContextValue {
   startProject: (id: string) => Promise<void>;
   stopProject: (id: string) => Promise<void>;
   restartProject: (id: string) => Promise<void>;
+  openInEditor: (id: string) => Promise<void>;
 }
 
 const ProcessesContext = createContext<ProcessesContextValue | null>(null);
@@ -117,6 +118,10 @@ export function ProcessesProvider({ children }: { children: ReactNode }) {
     await fetch(`/api/projects/${id}/restart`, { method: 'POST' });
   }, []);
 
+  const openInEditor = useCallback(async (id: string) => {
+    await fetch(`/api/projects/${id}/open-editor`, { method: 'POST' });
+  }, []);
+
   return (
     <ProcessesContext.Provider
       value={{
@@ -128,6 +133,7 @@ export function ProcessesProvider({ children }: { children: ReactNode }) {
         startProject,
         stopProject,
         restartProject,
+        openInEditor,
       }}
     >
       {children}

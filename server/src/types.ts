@@ -28,6 +28,7 @@ export interface Link {
 export interface Config {
   projects: Project[];
   links: Link[];
+  codeEditor?: string;
 }
 
 // WebSocket message types — Server → Client

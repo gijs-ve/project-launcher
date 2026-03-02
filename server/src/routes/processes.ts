@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { spawn } from 'child_process';
 import { processManager } from '../processes.js';
 import { readConfig } from '../config.js';
 
@@ -37,6 +38,29 @@ router.post('/:id/restart', (req: Request, res: Response) => {
     return;
   }
   processManager.restart(project);
+  res.json({ ok: true });
+});
+
+// POST /api/projects/:id/open-editor — open project cwd in the configured editor
+router.post('/:id/open-editor', (req: Request, res: Response) => {
+  const id = String(req.params.id);
+  const project = findProject(id);
+  if (!project) {
+    res.status(404).json({ error: 'Project not found' });
+    return;
+  }
+
+  const config = readConfig();
+  const editorCmd = (config.codeEditor ?? 'code').trim() || 'code';
+
+  // Split into command + args (e.g. "cursor" or "code --new-window")
+  const parts = editorCmd.split(/\s+/);
+  const cmd = parts[0];
+  const args = [...parts.slice(1), project.cwd];
+
+  const child = spawn(cmd, args, { detached: true, stdio: 'ignore' });
+  child.unref();
+
   res.json({ ok: true });
 });
 
