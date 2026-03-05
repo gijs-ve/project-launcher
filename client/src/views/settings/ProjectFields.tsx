@@ -11,6 +11,8 @@ export interface ProjectDraft {
   url: string;
   color: string;
   links: ProjectLink[];
+  jiraBaseUrl: string;
+  jiraProjectKeys: string; // comma-separated, e.g. "API, WEB"
 }
 
 export const DEFAULT_COLOR = '#3B82F6';
@@ -24,16 +26,20 @@ export function projectToDraft(p: Project): ProjectDraft {
     url: p.url ?? '',
     color: p.color,
     links: p.links ? p.links.map((l) => ({ ...l })) : [],
+    jiraBaseUrl: p.jiraBaseUrl ?? '',
+    jiraProjectKeys: (p.jiraProjectKeys ?? []).join(', '),
   };
 }
 
 export function isDraftDirty(draft: ProjectDraft, original: Project): boolean {
   if (
-    draft.name    !== original.name    ||
-    draft.cwd     !== original.cwd     ||
-    draft.command !== original.command ||
-    draft.url     !== (original.url ?? '') ||
-    draft.color   !== original.color
+    draft.name           !== original.name               ||
+    draft.cwd            !== original.cwd                ||
+    draft.command        !== original.command            ||
+    draft.url            !== (original.url ?? '')        ||
+    draft.color          !== original.color              ||
+    draft.jiraBaseUrl    !== (original.jiraBaseUrl ?? '')                    ||
+    draft.jiraProjectKeys !== (original.jiraProjectKeys ?? []).join(', ')
   ) return true;
   const orig = original.links ?? [];
   if (draft.links.length !== orig.length) return true;
@@ -104,6 +110,31 @@ export function ProjectFields({ draft, onChange }: ProjectFieldsProps) {
           <span className="font-mono text-xs text-zinc-400">{draft.color}</span>
         </div>
       </Field>
+
+      {/* Jira */}
+      <div className="flex flex-col gap-2 border border-zinc-800 rounded-md p-3 bg-zinc-950">
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-xs font-medium text-zinc-300">Jira</span>
+          <span className="font-mono text-[10px] text-zinc-600">(optional)</span>
+        </div>
+        <Field label="Base URL">
+          <input
+            className="input"
+            value={draft.jiraBaseUrl}
+            onChange={(e) => onChange({ jiraBaseUrl: e.target.value })}
+            placeholder="https://company.atlassian.net"
+          />
+        </Field>
+        <Field label="Project key(s)">
+          <input
+            className="input"
+            value={draft.jiraProjectKeys}
+            onChange={(e) => onChange({ jiraProjectKeys: e.target.value.toUpperCase() })}
+            placeholder="PROJ or API, WEB"
+          />
+          <span className="font-mono text-[10px] text-zinc-600">Separate multiple keys with a comma</span>
+        </Field>
+      </div>
 
       {/* Links */}
       <div className="flex flex-col gap-1.5">

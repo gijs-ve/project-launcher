@@ -60,37 +60,21 @@ export function ProjectsView() {
           <>
             {/* ── All projects — inactive ones full, active ones compact ── */}
             <div className="flex flex-wrap gap-4">
-              {/* Inactive projects (full card) */}
-              {inactiveProjects.map((project) => {
+              {config.projects.map((project) => {
                 const idx    = config.projects.indexOf(project);
                 const status = statuses[project.id] ?? 'stopped';
+                const isActive = status === 'running' || status === 'starting';
                 return (
                   <ProjectCard
                     key={project.id}
                     project={project}
                     index={idx}
                     status={status}
+                    compact={isActive}
                     isLogOpen={openLogId === project.id}
                     onToggleLogs={() =>
                       setOpenLogId((prev) => (prev === project.id ? null : project.id))
                     }
-                    onNavigate={() => navigateToProject(project.id)}
-                  />
-                );
-              })}
-              {/* Active projects (compact card — only Stop is clickable) */}
-              {activeProjects.map((project) => {
-                const idx    = config.projects.indexOf(project);
-                const status = statuses[project.id] ?? 'stopped';
-                return (
-                  <ProjectCard
-                    key={`compact-${project.id}`}
-                    project={project}
-                    index={idx}
-                    status={status}
-                    compact
-                    isLogOpen={false}
-                    onToggleLogs={() => {}}
                     onNavigate={() => navigateToProject(project.id)}
                   />
                 );

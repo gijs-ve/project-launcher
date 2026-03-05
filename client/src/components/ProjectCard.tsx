@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { Project, ProjectStatus } from '../types';
 import { StatusBadge } from './StatusBadge';
 import { useProcesses } from '../context/ProcessesContext';
+import { SplitStartButton } from './SplitStartButton';
 
 interface ProjectCardProps {
   project: Project;
@@ -109,9 +110,11 @@ export function ProjectCard({ project, index, status, isLogOpen, onToggleLogs, o
           // Full mode
           <>
             {canStart && (
-              <button onClick={() => startProject(project.id)} className="btn-primary">
-                Start
-              </button>
+              <SplitStartButton
+                onStart={() => startProject(project.id)}
+                onStartWith={(opts) => startProject(project.id, opts)}
+                dropUp={false}
+              />
             )}
             {canStop && (
               <button onClick={() => stopProject(project.id)} className="btn-danger">

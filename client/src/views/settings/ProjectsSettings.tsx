@@ -9,6 +9,7 @@ function toId(name: string) {
 
 const BLANK_DRAFT: ProjectDraft = {
   name: '', cwd: '', command: '', url: '', color: DEFAULT_COLOR, links: [],
+  jiraBaseUrl: '', jiraProjectKeys: '',
 };
 
 export function ProjectsSettings() {
@@ -71,6 +72,8 @@ export function ProjectsSettings() {
           url: d.url.trim() || undefined,
           color: d.color,
           links: d.links.length > 0 ? d.links : undefined,
+          jiraBaseUrl: d.jiraBaseUrl.trim() || undefined,
+          jiraProjectKeys: d.jiraProjectKeys.split(',').map((k) => k.trim().toUpperCase()).filter(Boolean),
         });
       }),
     );
@@ -93,6 +96,8 @@ export function ProjectsSettings() {
       url: newDraft.url.trim() || undefined,
       color: newDraft.color,
       links: newDraft.links.length > 0 ? newDraft.links : undefined,
+      jiraBaseUrl: newDraft.jiraBaseUrl.trim() || undefined,
+      jiraProjectKeys: newDraft.jiraProjectKeys.split(',').map((k) => k.trim().toUpperCase()).filter(Boolean),
     });
     setSaving(false);
     setNewDraft({ ...BLANK_DRAFT });
@@ -141,7 +146,7 @@ export function ProjectsSettings() {
         </div>
       )}
 
-      <div className="flex flex-col gap-px border border-zinc-800 rounded-lg overflow-hidden">
+      <div className="flex flex-col gap-px border border-zinc-800 rounded-lg">
         {config.projects.length === 0 && (
           <p className="font-mono text-zinc-500 text-xs p-4">No projects yet.</p>
         )}
@@ -152,7 +157,7 @@ export function ProjectsSettings() {
           const draftValid = draft.name.trim() && draft.cwd.trim() && draft.command.trim();
 
           return (
-            <div key={project.id}>
+            <div key={project.id} className="first:rounded-t-lg last:rounded-b-lg overflow-hidden">
               <div
                 className="flex items-center gap-4 px-4 py-3 bg-zinc-900 hover:bg-zinc-800 transition-colors cursor-pointer select-none"
                 style={{ borderLeft: `3px solid ${project.color}` }}

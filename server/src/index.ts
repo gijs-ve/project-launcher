@@ -5,6 +5,7 @@ import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
 import configRouter from './routes/config.js';
 import processesRouter from './routes/processes.js';
+import jiraRouter from './routes/jira.js';
 import { processManager } from './processes.js';
 import { ClientMessage } from './types.js';
 
@@ -36,6 +37,7 @@ if (process.env.ELECTRON_STATIC_DIR) {
 
 app.use('/api/config', configRouter);
 app.use('/api/projects', processesRouter);
+app.use('/api/jira', jiraRouter);
 
 // Health check
 app.get('/health', (_req, res) => res.json({ ok: true }));

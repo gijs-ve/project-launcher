@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useConfig } from '../../context/ConfigContext';
+import { JiraCredentials } from '../../types';
 
 interface KnownEditor {
   label: string;
@@ -37,6 +38,9 @@ export function GeneralSettings() {
     detectSelection(rawCommand) === 'custom' ? rawCommand : '',
   );
   const [saved, setSaved] = useState(false);
+  const [jiraEmail, setJiraEmail]       = useState(() => config.jira?.email ?? '');
+  const [jiraApiToken, setJiraApiToken] = useState(() => config.jira?.apiToken ?? '');
+  const [jiraSaved, setJiraSaved]       = useState(false);
 
   // Sync local state when config changes externally
   useEffect(() => {
@@ -50,8 +54,17 @@ export function GeneralSettings() {
     }
   }, [config.codeEditor]);
 
+  useEffect(() => {
+    setJiraEmail(config.jira?.email ?? '');
+    setJiraApiToken(config.jira?.apiToken ?? '');
+  }, [config.jira?.email, config.jira?.apiToken]);
+
   const currentCommand = selection === 'known' ? dropdownValue : customValue.trim() || 'code';
   const isDirty = currentCommand !== rawCommand;
+
+  const jiraIsDirty =
+    jiraEmail.trim()    !== (config.jira?.email    ?? '') ||
+    jiraApiToken.trim() !== (config.jira?.apiToken ?? '');
 
   const handleSave = async () => {
     await saveConfig({ ...config, codeEditor: currentCommand });
@@ -68,6 +81,16 @@ export function GeneralSettings() {
     } else {
       setCustomValue(cmd);
     }
+  };
+
+  const handleSaveJira = async () => {
+    const jira: JiraCredentials | undefined =
+      jiraEmail.trim() || jiraApiToken.trim()
+        ? { email: jiraEmail.trim(), apiToken: jiraApiToken.trim() }
+        : undefined;
+    await saveConfig({ ...config, jira });
+    setJiraSaved(true);
+    setTimeout(() => setJiraSaved(false), 2000);
   };
 
   return (
@@ -173,6 +196,72 @@ export function GeneralSettings() {
           </div>
         </div>
       </div>
+
+      {/* Jira credentials section */}
+      <div className="border border-zinc-800 rounded-lg overflow-hidden">
+        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
+          <p className="font-mono text-xs font-medium text-zinc-300">Jira credentials</p>
+          <p className="font-mono text-xs text-zinc-500 mt-0.5">
+            Used to fetch active sprint issues per project. Your API token is stored in{' '}
+            <span className="text-zinc-300">launch.config.json</span> — keep that file private.
+          </p>
+        </div>
+
+        <div className="px-4 py-4 bg-zinc-900 flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="font-mono text-xs text-zinc-500">Atlassian e-mail</label>
+            <input
+              type="email"
+              value={jiraEmail}
+              onChange={(e) => setJiraEmail(e.target.value)}
+              placeholder="you@company.com"
+              spellCheck={false}
+              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="font-mono text-xs text-zinc-500">
+              API token{' '}
+              <a
+                href="https://id.atlassian.com/manage-profile/security/api-tokens"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-400 hover:text-zinc-200 underline transition-colors"
+              >
+                Generate ↗
+              </a>
+            </label>
+            <input
+              type="password"
+              value={jiraApiToken}
+              onChange={(e) => setJiraApiToken(e.target.value)}
+              placeholder="••••••••••••••••••••"
+              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              className="btn-primary"
+              onClick={handleSaveJira}
+              disabled={!jiraIsDirty}
+            >
+              {jiraSaved ? 'Saved!' : 'Save'}
+            </button>
+            {jiraIsDirty && (
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  setJiraEmail(config.jira?.email ?? '');
+                  setJiraApiToken(config.jira?.apiToken ?? '');
+                }}
+              >
+                Discard
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }

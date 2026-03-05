@@ -6,7 +6,7 @@ import {
   useRef,
   ReactNode,
 } from 'react';
-import { ProjectStatus, ClientMessage } from '../types';
+import { ProjectStatus, ClientMessage, LaunchOptions } from '../types';
 import { useWebSocket } from '../hooks/useWebSocket';
 
 interface ProcessesContextValue {
@@ -20,7 +20,7 @@ interface ProcessesContextValue {
   unsubscribeOutput: (projectId: string) => void;
   /** Send raw input (stdin) to a running process */
   sendInput: (projectId: string, data: string) => void;
-  startProject: (id: string) => Promise<void>;
+  startProject: (id: string, opts?: LaunchOptions) => Promise<void>;
   stopProject: (id: string) => Promise<void>;
   restartProject: (id: string) => Promise<void>;
   openInEditor: (id: string) => Promise<void>;
@@ -106,8 +106,12 @@ export function ProcessesProvider({ children }: { children: ReactNode }) {
     [send],
   );
 
-  const startProject = useCallback(async (id: string) => {
-    await fetch(`/api/projects/${id}/start`, { method: 'POST' });
+  const startProject = useCallback(async (id: string, opts?: LaunchOptions) => {
+    await fetch(`/api/projects/${id}/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(opts ?? {}),
+    });
   }, []);
 
   const stopProject = useCallback(async (id: string) => {

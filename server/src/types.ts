@@ -16,6 +16,8 @@ export interface Project {
   url?: string;
   color: string;
   links?: ProjectLink[];
+  jiraBaseUrl?: string;
+  jiraProjectKeys?: string[];
 }
 
 export interface Link {
@@ -25,10 +27,16 @@ export interface Link {
   openMode: 'browser' | 'webview';
 }
 
+export interface JiraCredentials {
+  email: string;
+  apiToken: string;
+}
+
 export interface Config {
   projects: Project[];
   links: Link[];
   codeEditor?: string;
+  jira?: JiraCredentials;
 }
 
 // WebSocket message types — Server → Client

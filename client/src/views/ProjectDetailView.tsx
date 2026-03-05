@@ -4,6 +4,8 @@ import { useConfig } from '../context/ConfigContext';
 import { useProcesses } from '../context/ProcessesContext';
 import { StatusBadge } from '../components/StatusBadge';
 import { LogPanel } from '../components/LogPanel';
+import { SplitStartButton } from '../components/SplitStartButton';
+import { Project } from '../types';
 
 export function ProjectDetailView() {
   const { selectedProjectId, navigateBack } = useView();
@@ -81,9 +83,10 @@ export function ProjectDetailView() {
             {/* Action buttons */}
             <div className="flex items-center gap-2 mt-4 flex-wrap">
               {canStart && (
-                <button className="btn-primary" onClick={() => startProject(project.id)}>
-                  ▶ Start
-                </button>
+                <SplitStartButton
+                  onStart={() => startProject(project.id)}
+                  onStartWith={(opts) => startProject(project.id, opts)}
+                />
               )}
               {canStop && (
                 <button className="btn-danger" onClick={() => stopProject(project.id)}>
@@ -187,6 +190,13 @@ export function ProjectDetailView() {
 
         </div>
 
+        {/* ── Jira ──────────────────────────────────────────── */}
+        {project.jiraBaseUrl && project.jiraProjectKeys?.length && (
+          <div className="px-6 pb-6">
+            <JiraPanel project={project} />
+          </div>
+        )}
+
         {/* ── Links ─────────────────────────────────────────── */}
         {project.links && project.links.length > 0 && (
           <div className="px-6 pb-6">
@@ -250,6 +260,126 @@ function Section({ title, children }: { title: string; children: React.ReactNode
         {title}
       </h2>
       {children}
+    </div>
+  );
+}
+
+// ── Types returned by /api/jira/issues ─────────────────────────────────────
+
+interface JiraIssue {
+  id: string;
+  key: string;
+  fields: {
+    summary: string;
+    status: { name: string; statusCategory: { key: string } };
+    assignee: { displayName: string } | null;
+    priority: { name: string } | null;
+    issuetype: { name: string } | null;
+  };
+}
+
+// ── JiraPanel ──────────────────────────────────────────────────────────────
+
+function JiraPanel({ project }: { project: Project }) {
+  const [issues, setIssues]   = useState<JiraIssue[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    fetch(`/api/jira/issues?projectId=${encodeURIComponent(project.id)}`)
+      .then(async (r) => {
+        const text = await r.text();
+        let data: { issues?: JiraIssue[]; error?: string };
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(`Server returned non-JSON response (status ${r.status})`);
+        }
+        if (!r.ok || data.error) throw new Error(data.error ?? `HTTP ${r.status}`);
+        setIssues(data.issues ?? []);
+      })
+      .catch((err: unknown) => setError(String(err)))
+      .finally(() => setLoading(false));
+  }, [project.id]);
+
+  const boardUrl = project.jiraProjectKeys?.length === 1
+    ? `${project.jiraBaseUrl}/jira/software/projects/${project.jiraProjectKeys[0]}/boards`
+    : `${project.jiraBaseUrl}/jira/software/projects`;
+
+  function statusColor(key: string) {
+    if (key === 'done')       return 'text-emerald-400 border-emerald-800 bg-emerald-950/50';
+    if (key === 'indeterminate') return 'text-sky-400 border-sky-800 bg-sky-950/50'; // in progress
+    return 'text-zinc-400 border-zinc-700 bg-zinc-800/50'; // to do / default
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <h2 className="font-mono text-xs font-medium text-zinc-400 uppercase tracking-widest">
+          Jira — {project.jiraProjectKeys?.join(', ')} active sprint
+        </h2>
+        <a
+          href={boardUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-secondary text-xs"
+        >
+          ↗ Open board
+        </a>
+      </div>
+
+      {loading && (
+        <p className="font-mono text-xs text-zinc-500">Loading issues…</p>
+      )}
+
+      {!loading && error && (
+        <div className="bg-zinc-900 border border-red-900 rounded-lg p-3">
+          <p className="font-mono text-xs text-red-400">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && issues.length === 0 && (
+        <p className="font-mono text-xs text-zinc-500">No active sprint issues found.</p>
+      )}
+
+      {!loading && !error && issues.length > 0 && (
+        <div className="flex flex-col gap-1 border border-zinc-800 rounded-lg overflow-hidden">
+          {issues.map((issue) => {
+            const catKey = issue.fields.status.statusCategory?.key ?? '';
+            return (
+              <a
+                key={issue.id}
+                href={`${project.jiraBaseUrl}/browse/${issue.key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-3 px-3 py-2.5 bg-zinc-900 hover:bg-zinc-800 border-b border-zinc-800 last:border-b-0 transition-colors"
+              >
+                <span className="font-mono text-xs text-zinc-500 shrink-0 w-20 group-hover:text-zinc-400 transition-colors">
+                  {issue.key}
+                </span>
+                <span className="font-mono text-xs text-zinc-200 flex-1 truncate group-hover:text-white transition-colors">
+                  {issue.fields.summary}
+                </span>
+                <span
+                  className={[
+                    'font-mono text-[10px] px-1.5 py-0.5 rounded border shrink-0',
+                    statusColor(catKey),
+                  ].join(' ')}
+                >
+                  {issue.fields.status.name}
+                </span>
+                {issue.fields.assignee && (
+                  <span className="font-mono text-[10px] text-zinc-500 shrink-0 hidden sm:block">
+                    {issue.fields.assignee.displayName.split(' ')[0]}
+                  </span>
+                )}
+              </a>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -38,10 +38,10 @@ function HubTile({ icon, label, description, onClick }: HubTileProps) {
 export function SettingsView() {
   const { settingsTab, setSettingsTab } = useView();
 
-  if (settingsTab === 'projects')  return <ProjectsSettings />;
-  if (settingsTab === 'links')     return <LinksSettings />;
-  if (settingsTab === 'shortcuts') return <ShortcutsSettings />;
-  if (settingsTab === 'general')   return <GeneralSettings />;
+  if (settingsTab === 'projects')  return <div className="flex-1 min-h-0 flex flex-col"><ProjectsSettings /></div>;
+  if (settingsTab === 'links')     return <div className="flex-1 min-h-0 flex flex-col"><LinksSettings /></div>;
+  if (settingsTab === 'shortcuts') return <div className="flex-1 min-h-0 flex flex-col"><ShortcutsSettings /></div>;
+  if (settingsTab === 'general')   return <div className="flex-1 min-h-0 flex flex-col"><GeneralSettings /></div>;
 
   // Hub / landing page
   const tiles: { tab: SettingsTab; icon: string; label: string; description: string }[] = [

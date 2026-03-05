@@ -2,6 +2,13 @@ import * as pty from 'node-pty';
 import { WebSocket } from 'ws';
 import { Project, ProjectStatus, ServerMessage } from './types.js';
 
+export interface LaunchOptions {
+  /** Extra arguments appended to the command string (e.g. "-- --experimental-https") */
+  extraArgs?: string;
+  /** Additional environment variables merged into the process env */
+  envVars?: Record<string, string>;
+}
+
 // Maximum number of output lines kept in memory per project
 const BUFFER_LIMIT = 500;
 
@@ -70,7 +77,7 @@ class ProcessManager {
   // Process lifecycle
   // ---------------------------------------------------------------------------
 
-  start(project: Project): void {
+  start(project: Project, opts?: LaunchOptions): void {
     // If already running, do nothing
     const existing = this.processes.get(project.id);
     if (existing && (existing.status === 'running' || existing.status === 'starting')) {
@@ -83,14 +90,25 @@ class ProcessManager {
     // (e.g. NVM, Homebrew, etc.) regardless of how this server was started.
     const shell = process.env.SHELL || '/bin/zsh';
 
+    // Build the effective command, appending any extra args from launch options
+    const effectiveCommand = opts?.extraArgs
+      ? `${project.command} ${opts.extraArgs}`
+      : project.command;
+
+    // Merge extra env vars (e.g. NODE_ENV=production, NODE_OPTIONS=--inspect)
+    const effectiveEnv: Record<string, string> = {
+      ...(process.env as Record<string, string>),
+      ...(opts?.envVars ?? {}),
+    };
+
     let proc: pty.IPty;
     try {
-      proc = pty.spawn(shell, ['-l', '-c', project.command], {
+      proc = pty.spawn(shell, ['-l', '-c', effectiveCommand], {
         name: 'xterm-256color',
         cols: 120,
         rows: 30,
         cwd: project.cwd,
-        env: process.env as Record<string, string>,
+        env: effectiveEnv,
       });
     } catch (err) {
       console.error(`[ProcessManager] Failed to spawn ${project.id}:`, err);

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { spawn } from 'child_process';
 import { processManager } from '../processes.js';
+import { LaunchOptions } from '../processes.js';
 import { readConfig } from '../config.js';
 
 const router = Router();
@@ -18,7 +19,11 @@ router.post('/:id/start', (req: Request, res: Response) => {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
-  processManager.start(project);
+  const opts: LaunchOptions = {
+    extraArgs: req.body?.extraArgs ?? undefined,
+    envVars: req.body?.envVars ?? undefined,
+  };
+  processManager.start(project, opts);
   res.json({ ok: true });
 });
 
