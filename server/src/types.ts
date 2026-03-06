@@ -18,6 +18,7 @@ export interface Project {
   links?: ProjectLink[];
   jiraBaseUrl?: string;
   jiraProjectKeys?: string[];
+  jiraBoardUrl?: string;
 }
 
 export interface Link {
@@ -30,6 +31,8 @@ export interface Link {
 export interface JiraCredentials {
   email: string;
   apiToken: string;
+  /** Base URL shared by all projects, e.g. https://yourcompany.atlassian.net */
+  baseUrl?: string;
 }
 
 export interface Config {

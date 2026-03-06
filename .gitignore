@@ -65,7 +65,7 @@ sketch
 .history/
 
 # Built Visual Studio Code Extensions
-*.vsix
+*.vsix  
 
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
@@ -74,3 +74,4 @@ sketch
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,react,nextjs
 .vscode/settings.json
+**.gizzyb

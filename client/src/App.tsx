@@ -5,6 +5,7 @@ import { NavBar } from './components/NavBar';
 import { Toast } from './components/Toast';
 import { ProjectsView } from './views/ProjectsView';
 import { ProjectDetailView } from './views/ProjectDetailView';
+import { JiraTicketDetailView } from './views/JiraTicketDetailView';
 import { LinksView } from './views/LinksView';
 import { SettingsView } from './views/SettingsView';
 import { useState, useEffect } from 'react';
@@ -24,10 +25,11 @@ function AppShellInner() {
       <NavBar />
 
       {/* Views — conditionally rendered (not hidden) so they properly unmount */}
-      {activeView === 'projects'       && <ProjectsView />}
-      {activeView === 'project-detail' && <ProjectDetailView />}
-      {activeView === 'links'          && <LinksView />}
-      {activeView === 'settings'       && <SettingsView />}
+      {activeView === 'projects'            && <ProjectsView />}
+      {activeView === 'project-detail'       && <ProjectDetailView />}
+      {activeView === 'jira-ticket-detail'   && <JiraTicketDetailView />}
+      {activeView === 'links'                && <LinksView />}
+      {activeView === 'settings'             && <SettingsView />}
 
       {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
     </div>

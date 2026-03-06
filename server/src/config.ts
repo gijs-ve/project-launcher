@@ -9,7 +9,7 @@ function resolveConfigPath(): string {
   if (process.env.LAUNCH_CONFIG_PATH) {
     return process.env.LAUNCH_CONFIG_PATH;
   }
-  return path.resolve(__dirname, '..', '..', 'launch.config.json');
+  return path.resolve(__dirname, '..', '..', 'launch.config.gizzyb');
 }
 
 const CONFIG_PATH = resolveConfigPath();

@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+declare const __APP_VERSION__: string;
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 import { useView, SettingsTab } from '../context/ViewContext';
 import { ProjectsSettings } from './settings/ProjectsSettings';
 import { LinksSettings } from './settings/LinksSettings';
@@ -88,6 +92,7 @@ export function SettingsView() {
           />
         ))}
       </div>
+      <p className="font-mono text-[10px] text-zinc-700 mt-8">Launch v{__APP_VERSION__}</p>
     </div>
   );
 }

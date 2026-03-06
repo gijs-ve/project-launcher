@@ -16,15 +16,18 @@ const PORT = 4000;
 // ---------------------------------------------------------------------------
 const app = express();
 
-// Allow requests from the Vite dev server and the Electron renderer
-const allowedOrigins = [
-  'http://localhost:5173',
-  `http://localhost:${PORT}`,
-];
+// Allow requests from the Vite dev server and the Electron renderer.
+// Accept any localhost origin so differing Vite port assignments don't break dev.
 app.use(cors({
   origin: (origin, cb) => {
     // Allow requests with no origin (e.g. same-origin requests, Electron file://)
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    if (!origin) return cb(null, true);
+    try {
+      const { hostname } = new URL(origin);
+      if (hostname === 'localhost' || hostname === '127.0.0.1') return cb(null, true);
+    } catch {
+      // ignore malformed origins
+    }
     cb(new Error(`CORS blocked: ${origin}`));
   },
 }));

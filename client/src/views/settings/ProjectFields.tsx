@@ -11,8 +11,8 @@ export interface ProjectDraft {
   url: string;
   color: string;
   links: ProjectLink[];
-  jiraBaseUrl: string;
   jiraProjectKeys: string; // comma-separated, e.g. "API, WEB"
+  jiraBoardUrl: string;
 }
 
 export const DEFAULT_COLOR = '#3B82F6';
@@ -26,8 +26,8 @@ export function projectToDraft(p: Project): ProjectDraft {
     url: p.url ?? '',
     color: p.color,
     links: p.links ? p.links.map((l) => ({ ...l })) : [],
-    jiraBaseUrl: p.jiraBaseUrl ?? '',
     jiraProjectKeys: (p.jiraProjectKeys ?? []).join(', '),
+    jiraBoardUrl: p.jiraBoardUrl ?? '',
   };
 }
 
@@ -38,8 +38,8 @@ export function isDraftDirty(draft: ProjectDraft, original: Project): boolean {
     draft.command        !== original.command            ||
     draft.url            !== (original.url ?? '')        ||
     draft.color          !== original.color              ||
-    draft.jiraBaseUrl    !== (original.jiraBaseUrl ?? '')                    ||
-    draft.jiraProjectKeys !== (original.jiraProjectKeys ?? []).join(', ')
+    draft.jiraProjectKeys !== (original.jiraProjectKeys ?? []).join(', ')     ||
+    draft.jiraBoardUrl    !== (original.jiraBoardUrl ?? '')
   ) return true;
   const orig = original.links ?? [];
   if (draft.links.length !== orig.length) return true;
@@ -117,22 +117,28 @@ export function ProjectFields({ draft, onChange }: ProjectFieldsProps) {
           <span className="font-mono text-xs font-medium text-zinc-300">Jira</span>
           <span className="font-mono text-[10px] text-zinc-600">(optional)</span>
         </div>
-        <Field label="Base URL">
-          <input
-            className="input"
-            value={draft.jiraBaseUrl}
-            onChange={(e) => onChange({ jiraBaseUrl: e.target.value })}
-            placeholder="https://company.atlassian.net"
-          />
-        </Field>
         <Field label="Project key(s)">
           <input
             className="input"
             value={draft.jiraProjectKeys}
             onChange={(e) => onChange({ jiraProjectKeys: e.target.value.toUpperCase() })}
-            placeholder="PROJ or API, WEB"
+            placeholder="AS or AS, SLODEV"
           />
-          <span className="font-mono text-[10px] text-zinc-600">Separate multiple keys with a comma</span>
+          <span className="font-mono text-[10px] text-zinc-600">
+            The prefix before the dash in ticket keys — e.g. <code>AS</code> for AS-13.
+            Separate multiple with a comma.
+          </span>
+        </Field>
+        <Field label="Board URL (optional)">
+          <input
+            className="input"
+            value={draft.jiraBoardUrl}
+            onChange={(e) => onChange({ jiraBoardUrl: e.target.value })}
+            placeholder="https://yourcompany.atlassian.net/jira/software/c/projects/KEY/boards/123"
+          />
+          <span className="font-mono text-[10px] text-zinc-600">
+            Paste the full URL of your board. Used by the ↗ Open board button.
+          </span>
         </Field>
       </div>
 

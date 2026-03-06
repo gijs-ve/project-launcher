@@ -53,6 +53,7 @@ export interface Project {
   links?: ProjectLink[];
   jiraBaseUrl?: string;
   jiraProjectKeys?: string[];
+  jiraBoardUrl?: string;
 }
 
 export interface Link {
@@ -65,6 +66,8 @@ export interface Link {
 export interface JiraCredentials {
   email: string;
   apiToken: string;
+  /** Base URL shared by all projects, e.g. https://yourcompany.atlassian.net */
+  baseUrl?: string;
 }
 
 export interface Config {
@@ -72,6 +75,49 @@ export interface Config {
   links: Link[];
   codeEditor?: string;
   jira?: JiraCredentials;
+}
+
+// ── Jira types ──────────────────────────────────────────────────────────────
+
+export interface JiraUser {
+  accountId: string;
+  displayName: string;
+  emailAddress?: string;
+}
+
+export interface JiraIssue {
+  id: string;
+  key: string;
+  fields: {
+    summary: string;
+    status: { name: string; statusCategory: { key: string } };
+    assignee: JiraUser | null;
+    priority: { name: string; iconUrl?: string } | null;
+    issuetype: { name: string; iconUrl?: string } | null;
+    reporter?: JiraUser | null;
+    labels?: string[];
+    created?: string;
+    updated?: string;
+    description?: AdfNode | null;
+    comment?: { comments: JiraComment[] };
+  };
+}
+
+export interface JiraComment {
+  id: string;
+  author: JiraUser;
+  body: AdfNode;
+  created: string;
+  updated: string;
+}
+
+/** Atlassian Document Format node (simplified) */
+export interface AdfNode {
+  type: string;
+  text?: string;
+  content?: AdfNode[];
+  attrs?: Record<string, unknown>;
+  marks?: { type: string; attrs?: Record<string, unknown> }[];
 }
 
 // WebSocket message types — Server → Client

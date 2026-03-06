@@ -55,8 +55,8 @@ module.exports = {
       to: 'client',
     },
     {
-      from: 'launch.config.json',
-      to: 'launch.config.json',
+      from: 'launch.config.gizzyb',
+      to: 'launch.config.gizzyb',
     },
   ],
 

@@ -11,7 +11,8 @@
     "start": "npm run start --prefix server",
     "electron:compile": "tsc --project electron/tsconfig.json",
     "electron:dev": "concurrently --names server,vite,electron --prefix-colors cyan,magenta,yellow \"npm run dev --prefix server\" \"npm run dev --prefix client\" \"wait-on http://localhost:5173 tcp:4000 && electron .\"",
-    "electron:build": "npm run build && npm run electron:compile && electron-builder --config electron-builder.config.js",
+    "gen-icons": "bash scripts/gen-icons.sh",
+    "electron:build": "npm run gen-icons && npm run build && npm run electron:compile && electron-builder --config electron-builder.config.js",
     "electron:build:mac": "npm run electron:build -- --mac",
     "postinstall": "cd server && npm install"
   },

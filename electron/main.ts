@@ -8,8 +8,8 @@ const PORT = 4000;
 
 // ---------------------------------------------------------------------------
 // Config path management
-// In dev: project-root/launch.config.json (server resolves it via __dirname)
-// In packaged: ~/Library/Application Support/launch/launch.config.json
+// In dev: project-root/launch.config.gizzyb (server resolves it via __dirname)
+// In packaged: ~/Library/Application Support/launch/launch.config.gizzyb
 // ---------------------------------------------------------------------------
 function ensureConfig(): void {
   if (isDev) return; // dev server handles this itself
@@ -21,11 +21,11 @@ function ensureConfig(): void {
     fs.mkdirSync(userDataDir, { recursive: true });
   }
 
-  const configPath = path.join(userDataDir, 'launch.config.json');
+  const configPath = path.join(userDataDir, 'launch.config.gizzyb');
 
   if (!fs.existsSync(configPath)) {
     // Try to seed from a bundled default; otherwise start empty
-    const bundled = path.join(process.resourcesPath, 'launch.config.json');
+    const bundled = path.join(process.resourcesPath, 'launch.config.gizzyb');
     if (fs.existsSync(bundled)) {
       fs.copyFileSync(bundled, configPath);
     } else {

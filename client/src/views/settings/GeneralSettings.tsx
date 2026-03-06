@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useConfig } from '../../context/ConfigContext';
-import { JiraCredentials } from '../../types';
+import { JiraCredentials, Config } from '../../types';
 
 interface KnownEditor {
   label: string;
@@ -38,9 +38,18 @@ export function GeneralSettings() {
     detectSelection(rawCommand) === 'custom' ? rawCommand : '',
   );
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError]         = useState<string | null>(null);
+  const [jiraBaseUrl, setJiraBaseUrl]   = useState(() => config.jira?.baseUrl ?? '');
   const [jiraEmail, setJiraEmail]       = useState(() => config.jira?.email ?? '');
   const [jiraApiToken, setJiraApiToken] = useState(() => config.jira?.apiToken ?? '');
   const [jiraSaved, setJiraSaved]       = useState(false);
+  const [jiraError, setJiraError]       = useState<string | null>(null);
+
+  // Export / Import state
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync local state when config changes externally
   useEffect(() => {
@@ -55,21 +64,28 @@ export function GeneralSettings() {
   }, [config.codeEditor]);
 
   useEffect(() => {
+    setJiraBaseUrl(config.jira?.baseUrl ?? '');
     setJiraEmail(config.jira?.email ?? '');
     setJiraApiToken(config.jira?.apiToken ?? '');
-  }, [config.jira?.email, config.jira?.apiToken]);
+  }, [config.jira?.baseUrl, config.jira?.email, config.jira?.apiToken]);
 
   const currentCommand = selection === 'known' ? dropdownValue : customValue.trim() || 'code';
   const isDirty = currentCommand !== rawCommand;
 
   const jiraIsDirty =
+    jiraBaseUrl.trim() !== (config.jira?.baseUrl  ?? '') ||
     jiraEmail.trim()    !== (config.jira?.email    ?? '') ||
     jiraApiToken.trim() !== (config.jira?.apiToken ?? '');
 
   const handleSave = async () => {
-    await saveConfig({ ...config, codeEditor: currentCommand });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaveError(null);
+    try {
+      await saveConfig({ ...config, codeEditor: currentCommand });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setSaveError(String(err));
+    }
   };
 
   const handleDiscard = () => {
@@ -84,13 +100,76 @@ export function GeneralSettings() {
   };
 
   const handleSaveJira = async () => {
+    setJiraError(null);
     const jira: JiraCredentials | undefined =
-      jiraEmail.trim() || jiraApiToken.trim()
-        ? { email: jiraEmail.trim(), apiToken: jiraApiToken.trim() }
+      jiraEmail.trim() || jiraApiToken.trim() || jiraBaseUrl.trim()
+        ? { email: jiraEmail.trim(), apiToken: jiraApiToken.trim(), baseUrl: jiraBaseUrl.trim() || undefined }
         : undefined;
-    await saveConfig({ ...config, jira });
-    setJiraSaved(true);
-    setTimeout(() => setJiraSaved(false), 2000);
+    try {
+      await saveConfig({ ...config, jira });
+      setJiraSaved(true);
+      setTimeout(() => setJiraSaved(false), 2000);
+    } catch (err) {
+      setJiraError(String(err));
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/config/export');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'launch.config.gizzyb';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(`Export failed: ${String(err)}`);
+    }
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportError(null);
+    setImportSuccess(false);
+    setImporting(true);
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const text = ev.target?.result as string;
+        let parsed: Config;
+        try {
+          parsed = JSON.parse(text) as Config;
+        } catch {
+          throw new Error('File is not valid JSON');
+        }
+        if (!Array.isArray(parsed.projects) || !Array.isArray(parsed.links)) {
+          throw new Error('Invalid .gizzyb file: missing projects or links');
+        }
+        const r = await fetch('/api/config/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(parsed),
+        });
+        if (!r.ok) {
+          const data = await r.json() as { error?: string };
+          throw new Error(data.error ?? `HTTP ${r.status}`);
+        }
+        // Briefly show success, then reload so all contexts re-fetch the new config
+        setImportSuccess(true);
+        setTimeout(() => window.location.reload(), 600);
+      } catch (err) {
+        setImportError(String(err));
+      } finally {
+        setImporting(false);
+        // Reset the file input so the same file can be re-selected
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+    reader.readAsText(file);
   };
 
   return (
@@ -180,18 +259,23 @@ export function GeneralSettings() {
           </p>
 
           {/* Actions */}
-          <div className="flex gap-2">
-            <button
-              className="btn-primary"
-              onClick={handleSave}
-              disabled={!isDirty}
-            >
-              {saved ? 'Saved!' : 'Save'}
-            </button>
-            {isDirty && (
-              <button className="btn-secondary" onClick={handleDiscard}>
-                Discard
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <button
+                className="btn-primary"
+                onClick={handleSave}
+                disabled={!isDirty}
+              >
+                {saved ? 'Saved!' : 'Save'}
               </button>
+              {isDirty && (
+                <button className="btn-secondary" onClick={handleDiscard}>
+                  Discard
+                </button>
+              )}
+            </div>
+            {saveError && (
+              <p className="font-mono text-xs text-red-400">{saveError}</p>
             )}
           </div>
         </div>
@@ -203,11 +287,22 @@ export function GeneralSettings() {
           <p className="font-mono text-xs font-medium text-zinc-300">Jira credentials</p>
           <p className="font-mono text-xs text-zinc-500 mt-0.5">
             Used to fetch active sprint issues per project. Your API token is stored in{' '}
-            <span className="text-zinc-300">launch.config.json</span> — keep that file private.
+            <span className="text-zinc-300">launch.config.gizzyb</span> — keep that file private.
           </p>
         </div>
 
         <div className="px-4 py-4 bg-zinc-900 flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="font-mono text-xs text-zinc-500">Base URL</label>
+            <input
+              type="text"
+              value={jiraBaseUrl}
+              onChange={(e) => setJiraBaseUrl(e.target.value)}
+              placeholder="https://yourcompany.atlassian.net"
+              spellCheck={false}
+              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+            />
+          </div>
           <div className="flex flex-col gap-1.5">
             <label className="font-mono text-xs text-zinc-500">Atlassian e-mail</label>
             <input
@@ -239,26 +334,71 @@ export function GeneralSettings() {
               className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
             />
           </div>
-          <div className="flex gap-2">
-            <button
-              className="btn-primary"
-              onClick={handleSaveJira}
-              disabled={!jiraIsDirty}
-            >
-              {jiraSaved ? 'Saved!' : 'Save'}
-            </button>
-            {jiraIsDirty && (
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
               <button
-                className="btn-secondary"
-                onClick={() => {
-                  setJiraEmail(config.jira?.email ?? '');
-                  setJiraApiToken(config.jira?.apiToken ?? '');
-                }}
+                className="btn-primary"
+                onClick={handleSaveJira}
+                disabled={!jiraIsDirty}
               >
-                Discard
+                {jiraSaved ? 'Saved ✓' : 'Save'}
               </button>
+              {jiraIsDirty && (
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setJiraBaseUrl(config.jira?.baseUrl ?? '');
+                    setJiraEmail(config.jira?.email ?? '');
+                    setJiraApiToken(config.jira?.apiToken ?? '');
+                    setJiraError(null);
+                  }}
+                >
+                  Discard
+                </button>
+              )}
+            </div>
+            {jiraError && (
+              <p className="font-mono text-xs text-red-400">{jiraError}</p>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* ── Export / Import ──────────────────────────────── */}
+      <div className="border border-zinc-800 rounded-lg overflow-hidden">
+        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
+          <p className="font-mono text-xs font-medium text-zinc-300">Config file (.gizzyb)</p>
+          <p className="font-mono text-xs text-zinc-500 mt-0.5">
+            Export your full config to share with others, or import a <code className="text-zinc-400">.gizzyb</code> file
+            to load someone else's setup. Importing <strong className="text-zinc-300">replaces</strong> your current config.
+          </p>
+        </div>
+        <div className="px-4 py-4 bg-zinc-900 flex flex-col gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <button className="btn-secondary" onClick={handleExport}>
+              Export config
+            </button>
+            <button
+              className="btn-secondary"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+            >
+              {importing ? 'Importing…' : 'Import config'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".gizzyb,application/json"
+              className="hidden"
+              onChange={handleImport}
+            />
+          </div>
+          {importError && (
+            <p className="font-mono text-xs text-red-400">{importError}</p>
+          )}
+          {importSuccess && (
+            <p className="font-mono text-xs text-emerald-400">Config imported — reloading…</p>
+          )}
         </div>
       </div>
 

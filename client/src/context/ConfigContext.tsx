@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useState,
+  useRef,
   useEffect,
   useCallback,
   ReactNode,
@@ -30,6 +31,8 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<Config>({ projects: [], links: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Keep a stable ref to the last confirmed (saved) config for rollbacks
+  const lastSavedRef = useRef<Config>({ projects: [], links: [] });
 
   // Load config on mount
   useEffect(() => {
@@ -40,6 +43,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       })
       .then((data) => {
         setConfig(data);
+        lastSavedRef.current = data;
         setLoading(false);
       })
       .catch((err) => {
@@ -49,7 +53,9 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveConfig = useCallback(async (next: Config) => {
-    // Optimistic update
+    // Snapshot current confirmed state before optimistic update
+    const previous = lastSavedRef.current;
+    // Optimistic update so the UI feels instant
     setConfig(next);
     try {
       const r = await fetch('/api/config', {
@@ -59,10 +65,13 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const saved = (await r.json()) as Config;
+      lastSavedRef.current = saved;
       setConfig(saved);
     } catch (err) {
-      // Roll back on failure
+      // Roll back to the last successfully saved state
+      setConfig(previous);
       setError(String(err));
+      throw err; // re-throw so callers can show inline errors
     }
   }, []);
 

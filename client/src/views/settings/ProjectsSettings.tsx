@@ -9,7 +9,7 @@ function toId(name: string) {
 
 const BLANK_DRAFT: ProjectDraft = {
   name: '', cwd: '', command: '', url: '', color: DEFAULT_COLOR, links: [],
-  jiraBaseUrl: '', jiraProjectKeys: '',
+  jiraProjectKeys: '', jiraBoardUrl: '',
 };
 
 export function ProjectsSettings() {
@@ -60,48 +60,58 @@ export function ProjectsSettings() {
 
   const saveAll = async () => {
     setSaving(true);
-    await Promise.all(
-      dirtyIds.map((id) => {
-        const project = config.projects.find((p) => p.id === id)!;
-        const d = drafts[id];
-        return saveProject({
-          id: project.id,
-          name: d.name.trim(),
-          cwd: d.cwd.trim(),
-          command: d.command.trim(),
-          url: d.url.trim() || undefined,
-          color: d.color,
-          links: d.links.length > 0 ? d.links : undefined,
-          jiraBaseUrl: d.jiraBaseUrl.trim() || undefined,
-          jiraProjectKeys: d.jiraProjectKeys.split(',').map((k) => k.trim().toUpperCase()).filter(Boolean),
-        });
-      }),
-    );
-    setDrafts((prev) => {
-      const n = { ...prev };
-      dirtyIds.forEach((id) => delete n[id]);
-      return n;
-    });
-    setSaving(false);
+    try {
+      await Promise.all(
+        dirtyIds.map((id) => {
+          const project = config.projects.find((p) => p.id === id)!;
+          const d = drafts[id];
+          return saveProject({
+            id: project.id,
+            name: d.name.trim(),
+            cwd: d.cwd.trim(),
+            command: d.command.trim(),
+            url: d.url.trim() || undefined,
+            color: d.color,
+            links: d.links.length > 0 ? d.links : undefined,
+            jiraProjectKeys: d.jiraProjectKeys.split(',').map((k) => k.trim().toUpperCase()).filter(Boolean),
+            jiraBoardUrl: d.jiraBoardUrl.trim() || undefined,
+          });
+        }),
+      );
+      setDrafts((prev) => {
+        const n = { ...prev };
+        dirtyIds.forEach((id) => delete n[id]);
+        return n;
+      });
+    } catch {
+      // Error already surfaced via global Toast from ConfigContext
+    } finally {
+      setSaving(false);
+    }
   };
 
   const saveNewProject = async () => {
     if (!newDraft.name.trim() || !newDraft.cwd.trim() || !newDraft.command.trim()) return;
     setSaving(true);
-    await saveProject({
-      id: toId(newDraft.name),
-      name: newDraft.name.trim(),
-      cwd: newDraft.cwd.trim(),
-      command: newDraft.command.trim(),
-      url: newDraft.url.trim() || undefined,
-      color: newDraft.color,
-      links: newDraft.links.length > 0 ? newDraft.links : undefined,
-      jiraBaseUrl: newDraft.jiraBaseUrl.trim() || undefined,
-      jiraProjectKeys: newDraft.jiraProjectKeys.split(',').map((k) => k.trim().toUpperCase()).filter(Boolean),
-    });
-    setSaving(false);
-    setNewDraft({ ...BLANK_DRAFT });
-    setAddingProject(false);
+    try {
+      await saveProject({
+        id: toId(newDraft.name),
+        name: newDraft.name.trim(),
+        cwd: newDraft.cwd.trim(),
+        command: newDraft.command.trim(),
+        url: newDraft.url.trim() || undefined,
+        color: newDraft.color,
+        links: newDraft.links.length > 0 ? newDraft.links : undefined,
+        jiraProjectKeys: newDraft.jiraProjectKeys.split(',').map((k) => k.trim().toUpperCase()).filter(Boolean),
+        jiraBoardUrl: newDraft.jiraBoardUrl.trim() || undefined,
+      });
+      setNewDraft({ ...BLANK_DRAFT });
+      setAddingProject(false);
+    } catch {
+      // Error already surfaced via global Toast from ConfigContext
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

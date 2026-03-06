@@ -15,15 +15,16 @@ const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
 };
 
 export function NavBar() {
-  const { activeView, setActiveView, selectedProjectId, navigateBack, settingsTab, setSettingsTab } = useView();
+  const { activeView, setActiveView, selectedProjectId, navigateBack, navigateToRoot, settingsTab, setSettingsTab, selectedJiraIssueKey } = useView();
   const { config } = useConfig();
 
   const selectedProject = selectedProjectId
     ? config.projects.find((p) => p.id === selectedProjectId)
     : null;
 
-  const showProjectBreadcrumb = activeView === 'project-detail' && selectedProject;
-  const showSettingsBreadcrumb = activeView === 'settings' && settingsTab !== null;
+  const showProjectBreadcrumb    = activeView === 'project-detail' && selectedProject;
+  const showJiraBreadcrumb       = activeView === 'jira-ticket-detail' && selectedProject;
+  const showSettingsBreadcrumb   = activeView === 'settings' && settingsTab !== null;
 
   return (
     <header className="flex items-center justify-between h-12 pl-20 pr-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
@@ -53,6 +54,31 @@ export function NavBar() {
           </>
         )}
 
+        {/* Breadcrumb: Jira ticket detail */}
+        {showJiraBreadcrumb && (
+          <>
+            <span className="text-zinc-600 font-mono text-sm">/</span>
+            <button
+              onClick={navigateToRoot}
+              className="font-mono text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
+            >
+              Projects
+            </button>
+            <span className="text-zinc-600 font-mono text-sm">/</span>
+            <button
+              onClick={navigateBack}
+              className="font-mono text-sm transition-colors hover:text-zinc-200"
+              style={{ color: selectedProject.color }}
+            >
+              {selectedProject.name}
+            </button>
+            <span className="text-zinc-600 font-mono text-sm">/</span>
+            <span className="font-mono text-sm text-zinc-100 font-medium">
+              {selectedJiraIssueKey}
+            </span>
+          </>
+        )}
+
         {/* Breadcrumb: settings sub-section */}
         {showSettingsBreadcrumb && (
           <>
@@ -74,7 +100,8 @@ export function NavBar() {
       {/* Navigation tabs */}
       <nav className="flex items-center gap-1">
         {NAV_ITEMS.map(({ view, label }) => {
-          const active = activeView === view || (activeView === 'project-detail' && view === 'projects');
+          const active = activeView === view
+            || ((activeView === 'project-detail' || activeView === 'jira-ticket-detail') && view === 'projects');
           return (
             <button
               key={view}
