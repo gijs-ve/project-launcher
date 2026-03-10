@@ -45,7 +45,7 @@ export function SettingsView() {
   if (settingsTab === 'projects')  return <div className="flex-1 min-h-0 flex flex-col"><ProjectsSettings /></div>;
   if (settingsTab === 'links')     return <div className="flex-1 min-h-0 flex flex-col"><LinksSettings /></div>;
   if (settingsTab === 'shortcuts') return <div className="flex-1 min-h-0 flex flex-col"><ShortcutsSettings /></div>;
-  if (settingsTab === 'general')   return <div className="flex-1 min-h-0 flex flex-col"><GeneralSettings /></div>;
+  if (settingsTab === 'general')   return <div className="flex-1 overflow-y-auto"><GeneralSettings /></div>;
 
   // Hub / landing page
   const tiles: { tab: SettingsTab; icon: string; label: string; description: string }[] = [

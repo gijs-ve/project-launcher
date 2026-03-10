@@ -27,7 +27,7 @@ export function NavBar() {
   const showSettingsBreadcrumb   = activeView === 'settings' && settingsTab !== null;
 
   return (
-    <header className="flex items-center justify-between h-12 pl-20 pr-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
+    <header className="titlebar-drag flex items-center justify-between h-12 pl-20 pr-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
       {/* Brand + breadcrumb */}
       <div className="flex items-center gap-2">
         <button

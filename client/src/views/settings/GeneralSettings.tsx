@@ -214,7 +214,7 @@ export function GeneralSettings() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+    <div className="p-6 flex flex-col gap-6">
       {/* Header */}
       <div>
         <h2 className="font-mono font-medium text-zinc-100 text-sm">General</h2>
@@ -447,7 +447,7 @@ export function GeneralSettings() {
 
             {/* Saved list */}
             {savedAssignees.length > 0 ? (
-              <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
+              <div className="flex flex-col gap-1">
                 {savedAssignees.map((u) => (
                   <div key={u.accountId} className="flex items-center justify-between gap-2 bg-zinc-800 border border-zinc-700 rounded px-3 py-2">
                     <div className="flex flex-col min-w-0">

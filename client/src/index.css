@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * macOS window drag region.
+ * Apply .titlebar-drag to the header so the window can be moved.
+ * Buttons/inputs inside inherit no-drag so they stay clickable.
+ */
+.titlebar-drag {
+  -webkit-app-region: drag;
+}
+.titlebar-drag button,
+.titlebar-drag a,
+.titlebar-drag input,
+.titlebar-drag select {
+  -webkit-app-region: no-drag;
+}
+
 @layer components {
   .btn-primary {
     @apply px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
