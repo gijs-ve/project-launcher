@@ -191,13 +191,6 @@ export function ProjectDetailView() {
 
         </div>
 
-        {/* ── Jira ──────────────────────────────────────────── */}
-        {config.jira?.baseUrl && project.jiraProjectKeys?.length && (
-          <div className="px-6 pb-6">
-            <JiraPanel project={project} />
-          </div>
-        )}
-
         {/* ── Links ─────────────────────────────────────────── */}
         {project.links && project.links.length > 0 && (
           <div className="px-6 pb-6">
@@ -240,6 +233,13 @@ export function ProjectDetailView() {
           </div>
         )}
 
+        {/* ── Jira ──────────────────────────────────────────── */}
+        {config.jira?.baseUrl && project.jiraProjectKeys?.length && (
+          <div className="px-6 pb-6">
+            <JiraPanel project={project} />
+          </div>
+        )}
+
       </div>
 
       {/* ── Log panel — docked to bottom ──────────────────── */}
@@ -271,7 +271,10 @@ type SortField = 'tag' | 'number' | 'assignee' | 'status' | 'priority';
 type SortDir   = 'asc' | 'desc';
 
 const PRIORITY_ORDER: Record<string, number> = {
+  // Standard Atlassian names
   Highest: 0, High: 1, Medium: 2, Low: 3, Lowest: 4,
+  // Alternative common scheme
+  Blocker: 0, Critical: 1, Major: 2, Minor: 3, Trivial: 4,
 };
 
 const SORT_OPTIONS: { field: SortField; label: string }[] = [
@@ -290,12 +293,12 @@ function statusColor(key: string) {
 
 function priorityBadgeStyle(name: string | undefined | null) {
   switch (name) {
-    case 'Highest': return 'text-red-400    border-red-800    bg-red-950/50';
-    case 'High':    return 'text-orange-400 border-orange-800 bg-orange-950/50';
-    case 'Medium':  return 'text-yellow-400 border-yellow-800 bg-yellow-950/50';
-    case 'Low':     return 'text-sky-400    border-sky-800    bg-sky-950/50';
-    case 'Lowest':  return 'text-zinc-400   border-zinc-700   bg-zinc-800/50';
-    default:        return 'text-zinc-400   border-zinc-700   bg-zinc-800/50';
+    case 'Highest': case 'Blocker':   return 'text-red-400    border-red-800    bg-red-950/50';
+    case 'High':    case 'Critical':  return 'text-orange-400 border-orange-800 bg-orange-950/50';
+    case 'Medium':  case 'Major':     return 'text-yellow-400 border-yellow-800 bg-yellow-950/50';
+    case 'Low':     case 'Minor':     return 'text-sky-400    border-sky-800    bg-sky-950/50';
+    case 'Lowest':  case 'Trivial':   return 'text-zinc-400   border-zinc-700   bg-zinc-800/50';
+    default:                          return 'text-zinc-400   border-zinc-700   bg-zinc-800/50';
   }
 }
 
@@ -408,20 +411,30 @@ function JiraPanel({ project }: { project: Project }) {
   );
   const allAssignees = useMemo(() => {
     const seen = new Map<string, JiraUser>();
+    let hasUnassigned = false;
     for (const issue of issues) {
       if (issue.fields.assignee)
         seen.set(issue.fields.assignee.accountId, issue.fields.assignee);
+      else
+        hasUnassigned = true;
     }
-    return [...seen.values()].sort((a, b) => a.displayName.localeCompare(b.displayName));
+    const named = [...seen.values()].sort((a, b) => a.displayName.localeCompare(b.displayName));
+    // Prepend a sentinel entry so users can filter for unassigned tickets
+    if (hasUnassigned)
+      named.unshift({ accountId: '__unassigned__', displayName: 'Unassigned' });
+    return named;
   }, [issues]);
   const allStatuses = useMemo(
     () => [...new Set(issues.map((i) => i.fields.status.name))].sort(),
     [issues],
   );
   const allPriorities = useMemo(() => {
-    const order = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
+    const order = ['Highest', 'Blocker', 'High', 'Critical', 'Medium', 'Major', 'Low', 'Minor', 'Lowest', 'Trivial'];
     const found = new Set(issues.map((i) => i.fields.priority?.name).filter(Boolean));
-    return order.filter((p) => found.has(p));
+    // Return in severity order, then any unknowns alphabetically at the end
+    const known = order.filter((p) => found.has(p));
+    const unknown = [...found].filter((p) => p && !order.includes(p)).sort() as string[];
+    return [...known, ...unknown];
   }, [issues]);
 
   // ── filtered + sorted issues ───────────────────────────
@@ -429,8 +442,14 @@ function JiraPanel({ project }: { project: Project }) {
     const filtered = issues.filter((issue) => {
       const tag = issue.key.split('-')[0];
       if (filters.tags.length       && !filters.tags.includes(tag))                                  return false;
-      if (filters.assignees.length  && (!issue.fields.assignee ||
-          !filters.assignees.includes(issue.fields.assignee.accountId)))                             return false;
+      if (filters.assignees.length) {
+        const wantUnassigned = filters.assignees.includes('__unassigned__');
+        const wantedIds = filters.assignees.filter((id) => id !== '__unassigned__');
+        const matchesUnassigned = wantUnassigned && !issue.fields.assignee;
+        const matchesNamed = wantedIds.length > 0 && !!issue.fields.assignee &&
+          wantedIds.includes(issue.fields.assignee.accountId);
+        if (!matchesUnassigned && !matchesNamed) return false;
+      }
       if (filters.statuses.length   && !filters.statuses.includes(issue.fields.status.name))        return false;
       if (filters.priorities.length && !filters.priorities.includes(issue.fields.priority?.name ?? '')) return false;
       return true;
@@ -480,6 +499,35 @@ function JiraPanel({ project }: { project: Project }) {
         )}
       </div>
 
+      {/* ── Column visibility row ───────────────────────── */}
+      {!loading && !error && issues.length > 0 && (
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-[10px] text-zinc-600 uppercase tracking-wider shrink-0 mr-0.5">
+            Show:
+          </span>
+          {(['priority', 'status'] as const).map((col) => {
+            const on = col === 'priority' ? showPriority : showStatus;
+            const toggle = col === 'priority'
+              ? () => setShowPriority((v) => !v)
+              : () => setShowStatus((v) => !v);
+            return (
+              <button
+                key={col}
+                onClick={toggle}
+                className={[
+                  'font-mono text-[10px] px-2 py-0.5 rounded border transition-colors',
+                  on
+                    ? 'bg-zinc-700 border-zinc-500 text-zinc-100'
+                    : 'bg-zinc-800/60 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600',
+                ].join(' ')}
+              >
+                {col === 'priority' ? 'Priority' : 'Status'}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* ── Sort bar + filter button ────────────────────── */}
       {!loading && !error && issues.length > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -519,35 +567,6 @@ function JiraPanel({ project }: { project: Project }) {
           >
             ⚙ Filters{filterCount > 0 ? ` (${filterCount})` : ''}
           </button>
-        </div>
-      )}
-
-      {/* ── Column visibility row ───────────────────────── */}
-      {!loading && !error && issues.length > 0 && (
-        <div className="flex items-center gap-1.5">
-          <span className="font-mono text-[10px] text-zinc-600 uppercase tracking-wider shrink-0 mr-0.5">
-            Show:
-          </span>
-          {(['priority', 'status'] as const).map((col) => {
-            const on = col === 'priority' ? showPriority : showStatus;
-            const toggle = col === 'priority'
-              ? () => setShowPriority((v) => !v)
-              : () => setShowStatus((v) => !v);
-            return (
-              <button
-                key={col}
-                onClick={toggle}
-                className={[
-                  'font-mono text-[10px] px-2 py-0.5 rounded border transition-colors',
-                  on
-                    ? 'bg-zinc-700 border-zinc-500 text-zinc-100'
-                    : 'bg-zinc-800/60 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600',
-                ].join(' ')}
-              >
-                {col === 'priority' ? 'Priority' : 'Status'}
-              </button>
-            );
-          })}
         </div>
       )}
 
