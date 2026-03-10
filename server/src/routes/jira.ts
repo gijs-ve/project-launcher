@@ -25,6 +25,46 @@ function resolveJiraContext(projectId?: string) {
   return { baseUrl, auth, project, config };
 }
 
+// GET /api/jira/statuses?projectId=my-project
+// Returns all statuses for the project's Jira keys, ordered roughly by workflow position.
+router.get('/statuses', async (req: Request, res: Response) => {
+  try {
+    const { projectId } = req.query as { projectId?: string };
+    const ctx = resolveJiraContext(projectId);
+    if ('error' in ctx) { res.status(400).json({ error: ctx.error }); return; }
+
+    const jiraProjectKeys = ctx.project?.jiraProjectKeys ?? [];
+    if (!jiraProjectKeys.length) { res.status(400).json({ error: 'No Jira project keys configured' }); return; }
+
+    // Fetch statuses for all configured project keys and merge them
+    const allStatuses = new Map<string, { id: string; name: string; statusCategory: { key: string; name: string } }>();
+
+    await Promise.all(jiraProjectKeys.map(async (key) => {
+      const r = await fetch(
+        `${ctx.baseUrl}/rest/api/3/project/${encodeURIComponent(key)}/statuses`,
+        { headers: { Authorization: `Basic ${ctx.auth}`, Accept: 'application/json' } },
+      );
+      if (!r.ok) return; // skip failures silently per-project
+      const data = await r.json() as Array<{ statuses: Array<{ id: string; name: string; statusCategory: { key: string; name: string } }> }>;
+      for (const issueType of data) {
+        for (const s of issueType.statuses ?? []) {
+          allStatuses.set(s.name, s);
+        }
+      }
+    }));
+
+    // Sort: To Do → In Progress → In Review → Done category order
+    const categoryOrder: Record<string, number> = { 'new': 0, 'indeterminate': 1, 'done': 2 };
+    const sorted = [...allStatuses.values()].sort(
+      (a, b) => (categoryOrder[a.statusCategory.key] ?? 1) - (categoryOrder[b.statusCategory.key] ?? 1),
+    );
+
+    res.json({ statuses: sorted });
+  } catch (err) {
+    res.status(502).json({ error: `Jira proxy error: ${String(err)}` });
+  }
+});
+
 // GET /api/jira/me?projectId=my-project
 // Returns the currently authenticated Jira user (accountId, displayName, emailAddress).
 router.get('/me', async (req: Request, res: Response) => {
@@ -149,6 +189,113 @@ router.get('/issues', async (req: Request, res: Response) => {
 
     const data = await response.json() as { issues: unknown[] };
     res.json({ issues: data.issues ?? [] });
+  } catch (err) {
+    res.status(502).json({ error: `Jira proxy error: ${String(err)}` });
+  }
+});
+
+// GET /api/jira/transitions/:issueKey?projectId=my-project
+// Returns the available status transitions for the given issue.
+router.get('/transitions/:issueKey', async (req: Request, res: Response) => {
+  try {
+    const issueKey = String(req.params.issueKey);
+    const { projectId } = req.query as { projectId?: string };
+    const ctx = resolveJiraContext(projectId);
+    if ('error' in ctx) { res.status(400).json({ error: ctx.error }); return; }
+
+    const response = await fetch(
+      `${ctx.baseUrl}/rest/api/3/issue/${encodeURIComponent(issueKey)}/transitions`,
+      { headers: { Authorization: `Basic ${ctx.auth}`, Accept: 'application/json' } },
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      res.status(response.status).json({ error: `Jira API error ${response.status}: ${text.slice(0, 200)}` });
+      return;
+    }
+
+    const data = await response.json() as {
+      transitions: Array<{ id: string; name: string; to: { name: string; statusCategory: { key: string } } }>;
+    };
+    res.json({ transitions: data.transitions ?? [] });
+  } catch (err) {
+    res.status(502).json({ error: `Jira proxy error: ${String(err)}` });
+  }
+});
+
+// POST /api/jira/transition/:issueKey?projectId=my-project
+// Body: { transitionId: string }
+// Applies the given transition to the issue.
+router.post('/transition/:issueKey', async (req: Request, res: Response) => {
+  try {
+    const issueKey = String(req.params.issueKey);
+    const { projectId } = req.query as { projectId?: string };
+    const { transitionId } = req.body as { transitionId?: string };
+    if (!transitionId) { res.status(400).json({ error: 'transitionId is required in request body' }); return; }
+
+    const ctx = resolveJiraContext(projectId);
+    if ('error' in ctx) { res.status(400).json({ error: ctx.error }); return; }
+
+    const response = await fetch(
+      `${ctx.baseUrl}/rest/api/3/issue/${encodeURIComponent(issueKey)}/transitions`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${ctx.auth}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transition: { id: transitionId } }),
+      },
+    );
+
+    // Jira returns 204 No Content on success
+    if (!response.ok && response.status !== 204) {
+      const text = await response.text();
+      res.status(response.status).json({ error: `Jira API error ${response.status}: ${text.slice(0, 200)}` });
+      return;
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(502).json({ error: `Jira proxy error: ${String(err)}` });
+  }
+});
+
+// PUT /api/jira/assign/:issueKey?projectId=my-project
+// Body: { accountId: string | null }  — null = unassign
+router.put('/assign/:issueKey', async (req: Request, res: Response) => {
+  try {
+    const issueKey = String(req.params.issueKey);
+    const { projectId } = req.query as { projectId?: string };
+    const { accountId } = req.body as { accountId?: string | null };
+    // accountId may be explicitly null (unassign) or a string
+    if (accountId === undefined) { res.status(400).json({ error: 'accountId is required in request body (use null to unassign)' }); return; }
+
+    const ctx = resolveJiraContext(projectId);
+    if ('error' in ctx) { res.status(400).json({ error: ctx.error }); return; }
+
+    const response = await fetch(
+      `${ctx.baseUrl}/rest/api/3/issue/${encodeURIComponent(issueKey)}/assignee`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Basic ${ctx.auth}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ accountId: accountId ?? null }),
+      },
+    );
+
+    // Jira returns 204 on success
+    if (!response.ok && response.status !== 204) {
+      const text = await response.text();
+      res.status(response.status).json({ error: `Jira API error ${response.status}: ${text.slice(0, 200)}` });
+      return;
+    }
+
+    res.json({ ok: true });
   } catch (err) {
     res.status(502).json({ error: `Jira proxy error: ${String(err)}` });
   }

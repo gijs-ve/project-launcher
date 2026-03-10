@@ -73,7 +73,7 @@ export function GeneralSettings() {
   const isDirty = currentCommand !== rawCommand;
 
   const jiraIsDirty =
-    jiraBaseUrl.trim() !== (config.jira?.baseUrl  ?? '') ||
+    jiraBaseUrl.trim()  !== (config.jira?.baseUrl  ?? '') ||
     jiraEmail.trim()    !== (config.jira?.email    ?? '') ||
     jiraApiToken.trim() !== (config.jira?.apiToken ?? '');
 
@@ -334,6 +334,7 @@ export function GeneralSettings() {
               className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
             />
           </div>
+
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
               <button

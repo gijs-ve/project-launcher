@@ -68,6 +68,12 @@ export interface JiraCredentials {
   apiToken: string;
   /** Base URL shared by all projects, e.g. https://yourcompany.atlassian.net */
   baseUrl?: string;
+  /**
+   * Target status name used by the bulk transition action on the project detail
+   * view (e.g. "In Review", "In Progress", "Done").  The app will automatically
+   * chain through intermediate steps if a direct transition is not available.
+   */
+  bulkTransitionStatus?: string;
 }
 
 export interface Config {
