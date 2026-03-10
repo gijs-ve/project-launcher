@@ -74,6 +74,8 @@ export interface JiraCredentials {
    * chain through intermediate steps if a direct transition is not available.
    */
   bulkTransitionStatus?: string;
+  /** Manually saved Jira users that always appear in bulk-assign dropdown. */
+  savedAssignees?: JiraUser[];
 }
 
 export interface Config {
@@ -106,7 +108,15 @@ export interface JiraIssue {
     updated?: string;
     description?: AdfNode | null;
     comment?: { comments: JiraComment[] };
+    attachment?: JiraAttachment[];
   };
+}
+
+export interface JiraAttachment {
+  id: string; // numeric string, e.g. "10042"
+  filename: string;
+  mimeType: string;
+  content: string; // direct download URL
 }
 
 export interface JiraComment {

@@ -1,7 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { useView } from '../context/ViewContext';
 import { useConfig } from '../context/ConfigContext';
 import { JiraIssue, JiraUser, JiraComment, AdfNode } from '../types';
+import { AssigneeChip } from '../components/AssigneeChip';
+
+import { JiraAttachment } from '../types';
+
+// Context that threads projectId + attachments into deeply-nested ADF nodes
+const AdfCtx = createContext<{ projectId: string | undefined; attachments: JiraAttachment[] }>(
+  { projectId: undefined, attachments: [] },
+);
 
 // ── Atlassian Document Format renderer ──────────────────────────────────────
 
@@ -35,6 +43,7 @@ function AdfText({ node }: { node: AdfNode }): React.ReactElement {
 }
 
 function AdfNodeRenderer({ node, depth = 0 }: { node: AdfNode; depth?: number }): React.ReactElement | null {
+  const { projectId, attachments } = useContext(AdfCtx);
   switch (node.type) {
     case 'doc':
       return (
@@ -177,6 +186,41 @@ function AdfNodeRenderer({ node, depth = 0 }: { node: AdfNode; depth?: number })
       );
     }
 
+    case 'mediaSingle':
+      return (
+        <div className="my-2">
+          {node.content?.map((child, i) => <AdfNodeRenderer key={i} node={child} depth={depth} />)}
+        </div>
+      );
+
+    case 'media': {
+      const mediaType = node.attrs?.type as string | undefined;
+      const alt       = node.attrs?.alt as string | undefined;
+      if (mediaType === 'file') {
+        // The ADF id is a Media Service UUID — map to numeric Jira attachment ID via filename
+        const attachment = alt ? attachments.find((a) => a.filename === alt) : undefined;
+        if (attachment) {
+          const qs  = projectId ? `?projectId=${encodeURIComponent(projectId)}` : '';
+          const src = `/api/jira/attachment/${encodeURIComponent(attachment.id)}${qs}`;
+          return (
+            <img
+              src={src}
+              alt={alt ?? 'attachment'}
+              className="max-w-full rounded border border-zinc-700 my-1"
+              loading="lazy"
+            />
+          );
+        }
+        // Attachment not in list — show filename as placeholder
+        return alt ? <span className="font-mono text-xs text-zinc-500">[{alt}]</span> : null;
+      }
+      // External/link media
+      const url = node.attrs?.url as string | undefined;
+      return url ? (
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline font-mono text-xs break-all">{url}</a>
+      ) : null;
+    }
+
     default:
       // Render children if possible, otherwise nothing
       if (node.content?.length) {
@@ -222,12 +266,7 @@ function CommentCard({ comment, isMe }: { comment: JiraComment; isMe: boolean })
       isMe ? 'border-sky-800 bg-sky-950/20' : 'border-zinc-800 bg-zinc-900',
     ].join(' ')}>
       <div className="flex items-center justify-between gap-3">
-        <span className={[
-          'font-mono text-xs font-semibold',
-          isMe ? 'text-sky-400' : 'text-zinc-300',
-        ].join(' ')}>
-          {isMe && '● '}{comment.author.displayName}
-        </span>
+        <AssigneeChip user={comment.author} isMe={isMe} />
         <span className="font-mono text-[10px] text-zinc-600">{formatDate(comment.created)}</span>
       </div>
       <div className="text-sm text-zinc-400 leading-relaxed">
@@ -293,8 +332,9 @@ export function JiraTicketDetailView() {
   const f = issue?.fields;
   const catKey = f?.status.statusCategory?.key ?? '';
   const comments = f?.comment?.comments ?? [];
-  
+
   return (
+    <AdfCtx.Provider value={{ projectId: selectedProjectId ?? undefined, attachments: f?.attachment ?? [] }}>
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex-1 overflow-y-auto">
 
@@ -356,12 +396,7 @@ export function JiraTicketDetailView() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <MetaCard label="Assignee">
                 {f?.assignee ? (
-                  <span className={[
-                    'font-mono text-xs',
-                    isMe(f.assignee) ? 'text-sky-400 font-semibold' : 'text-zinc-200',
-                  ].join(' ')}>
-                    {isMe(f.assignee) && '● '}{f.assignee.displayName}
-                  </span>
+                  <AssigneeChip user={f.assignee} isMe={isMe(f.assignee)} />
                 ) : (
                   <span className="font-mono text-xs text-zinc-600">Unassigned</span>
                 )}
@@ -369,12 +404,7 @@ export function JiraTicketDetailView() {
 
               <MetaCard label="Reporter">
                 {f?.reporter ? (
-                  <span className={[
-                    'font-mono text-xs',
-                    isMe(f.reporter) ? 'text-sky-400 font-semibold' : 'text-zinc-200',
-                  ].join(' ')}>
-                    {isMe(f.reporter) && '● '}{f.reporter.displayName}
-                  </span>
+                  <AssigneeChip user={f.reporter} isMe={isMe(f.reporter)} />
                 ) : (
                   <span className="font-mono text-xs text-zinc-600">—</span>
                 )}
@@ -438,6 +468,7 @@ export function JiraTicketDetailView() {
 
       </div>
     </div>
+    </AdfCtx.Provider>
   );
 }
 

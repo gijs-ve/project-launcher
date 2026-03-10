@@ -6,6 +6,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { LogPanel } from '../components/LogPanel';
 import { SplitStartButton } from '../components/SplitStartButton';
 import { Modal, ModalSection } from '../components/Modal';
+import { AssigneeChip } from '../components/AssigneeChip';
 import { Project, JiraIssue, JiraUser } from '../types';
 
 export function ProjectDetailView() {
@@ -357,6 +358,7 @@ function activeFilterCount(f: JiraFilters) {
 
 function JiraPanel({ project }: { project: Project }) {
   const { navigateToJiraIssue } = useView();
+  const { config, saveConfig }  = useConfig();
   const [issues, setIssues]     = useState<JiraIssue[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
@@ -461,12 +463,17 @@ function JiraPanel({ project }: { project: Project }) {
       else
         hasUnassigned = true;
     }
+    // Merge in saved assignees from settings (deduped by accountId)
+    for (const saved of (config.jira?.savedAssignees ?? [])) {
+      if (!seen.has(saved.accountId))
+        seen.set(saved.accountId, saved);
+    }
     const named = [...seen.values()].sort((a, b) => a.displayName.localeCompare(b.displayName));
     // Prepend a sentinel entry so users can filter for unassigned tickets
     if (hasUnassigned)
       named.unshift({ accountId: '__unassigned__', displayName: 'Unassigned' });
     return named;
-  }, [issues]);
+  }, [issues, config.jira?.savedAssignees]);
   const allStatuses = useMemo(
     () => [...new Set(issues.map((i) => i.fields.status.name))].sort(),
     [issues],
@@ -502,6 +509,7 @@ function JiraPanel({ project }: { project: Project }) {
   // ── bulk transition ─────────────────────────────
   const [bulkTargetStatus, setBulkTargetStatus] = useState<string>('');
   const [bulkAssigneeId, setBulkAssigneeId]     = useState<string>(''); // '' = unset, '__unassigned__' = unassign
+
   const [bulkAssigning, setBulkAssigning]       = useState(false);
 
   const handleBulkAssign = async () => {
@@ -818,13 +826,12 @@ function JiraPanel({ project }: { project: Project }) {
 
                   {/* Assignee */}
                   {issue.fields.assignee && (
-                    <span
-                      className={[
-                        'font-mono text-[10px] shrink-0 hidden md:block',
-                        assignedToMe ? 'text-sky-400 font-semibold' : 'text-zinc-500',
-                      ].join(' ')}
-                    >
-                      {assignedToMe ? '● ' : ''}{issue.fields.assignee.displayName.split(' ')[0]}
+                    <span className="shrink-0 hidden md:inline-flex">
+                      <AssigneeChip
+                        user={issue.fields.assignee}
+                        isMe={assignedToMe}
+                        size="text-[10px]"
+                      />
                     </span>
                   )}
                 </button>

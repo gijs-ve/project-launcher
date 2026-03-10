@@ -30,9 +30,12 @@ export function NavBar() {
     <header className="flex items-center justify-between h-12 pl-20 pr-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
       {/* Brand + breadcrumb */}
       <div className="flex items-center gap-2">
-        <span className="text-base font-mono font-medium text-zinc-100 tracking-tight">
+        <button
+          onClick={() => setActiveView('projects')}
+          className="text-base font-mono font-medium text-zinc-100 tracking-tight hover:text-zinc-300 transition-colors"
+        >
           🚀 Launch
-        </span>
+        </button>
 
         {/* Breadcrumb: project detail */}
         {showProjectBreadcrumb && (

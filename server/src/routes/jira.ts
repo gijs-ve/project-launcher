@@ -65,6 +65,33 @@ router.get('/statuses', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/jira/user/:accountId?projectId=my-project
+// Looks up a Jira user by accountId and returns { accountId, displayName, emailAddress }.
+router.get('/user/:accountId', async (req: Request, res: Response) => {
+  try {
+    const accountId = String(req.params.accountId);
+    const { projectId } = req.query as { projectId?: string };
+    const ctx = resolveJiraContext(projectId);
+    if ('error' in ctx) { res.status(400).json({ error: ctx.error }); return; }
+
+    const response = await fetch(
+      `${ctx.baseUrl}/rest/api/3/user?accountId=${encodeURIComponent(accountId)}`,
+      { headers: { Authorization: `Basic ${ctx.auth}`, Accept: 'application/json' } },
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      res.status(response.status).json({ error: `Jira API error ${response.status}: ${text.slice(0, 200)}` });
+      return;
+    }
+
+    const data = await response.json() as { accountId: string; displayName: string; emailAddress?: string };
+    res.json({ accountId: data.accountId, displayName: data.displayName, emailAddress: data.emailAddress });
+  } catch (err) {
+    res.status(502).json({ error: `Jira proxy error: ${String(err)}` });
+  }
+});
+
 // GET /api/jira/me?projectId=my-project
 // Returns the currently authenticated Jira user (accountId, displayName, emailAddress).
 router.get('/me', async (req: Request, res: Response) => {
@@ -101,7 +128,7 @@ router.get('/issue/:issueKey', async (req: Request, res: Response) => {
 
     const fields = [
       'summary', 'status', 'assignee', 'priority', 'issuetype',
-      'description', 'labels', 'created', 'updated', 'reporter', 'comment',
+      'description', 'labels', 'created', 'updated', 'reporter', 'comment', 'attachment',
     ].join(',');
 
     const response = await fetch(`${ctx.baseUrl}/rest/api/3/issue/${encodeURIComponent(issueKey)}?fields=${fields}`, {
@@ -257,6 +284,41 @@ router.post('/transition/:issueKey', async (req: Request, res: Response) => {
     }
 
     res.json({ ok: true });
+  } catch (err) {
+    res.status(502).json({ error: `Jira proxy error: ${String(err)}` });
+  }
+});
+
+// GET /api/jira/attachment/:attachmentId?projectId=my-project
+// Proxies a Jira attachment (image or file) through the server so the client
+// doesn't need to embed credentials in the browser request.
+router.get('/attachment/:attachmentId', async (req: Request, res: Response) => {
+  try {
+    const attachmentId = String(req.params.attachmentId);
+    const { projectId } = req.query as { projectId?: string };
+    const ctx = resolveJiraContext(projectId);
+    if ('error' in ctx) { res.status(400).json({ error: ctx.error }); return; }
+
+    // attachmentId here is the numeric Jira attachment ID (not the Media UUID).
+    // /rest/api/3/attachment/content/:id returns the binary file directly.
+    const contentUrl = `${ctx.baseUrl}/rest/api/3/attachment/content/${encodeURIComponent(attachmentId)}`;
+    const contentResp = await fetch(contentUrl, {
+      headers: { Authorization: `Basic ${ctx.auth}` },
+      // Follow redirects (Jira sometimes issues a 303 to the actual CDN URL)
+      redirect: 'follow',
+    });
+    if (!contentResp.ok) {
+      const text = await contentResp.text();
+      res.status(contentResp.status).json({ error: `Jira attachment error ${contentResp.status}: ${text.slice(0, 200)}` });
+      return;
+    }
+
+    const contentType = contentResp.headers.get('content-type') ?? 'application/octet-stream';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+
+    const buf = await contentResp.arrayBuffer();
+    res.end(Buffer.from(buf));
   } catch (err) {
     res.status(502).json({ error: `Jira proxy error: ${String(err)}` });
   }

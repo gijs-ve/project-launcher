@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useConfig } from '../../context/ConfigContext';
-import { JiraCredentials, Config } from '../../types';
+import { JiraCredentials, Config, JiraUser } from '../../types';
 
 interface KnownEditor {
   label: string;
@@ -44,6 +44,47 @@ export function GeneralSettings() {
   const [jiraApiToken, setJiraApiToken] = useState(() => config.jira?.apiToken ?? '');
   const [jiraSaved, setJiraSaved]       = useState(false);
   const [jiraError, setJiraError]       = useState<string | null>(null);
+
+  // Saved assignees
+  const [assigneeIdInput, setAssigneeIdInput] = useState('');
+  const [assigneeLookupLoading, setAssigneeLookupLoading] = useState(false);
+  const [assigneeLookupError, setAssigneeLookupError]     = useState<string | null>(null);
+
+  const savedAssignees: JiraUser[] = config.jira?.savedAssignees ?? [];
+
+  const handleAddAssignee = async () => {
+    const id = assigneeIdInput.trim();
+    if (!id) return;
+    if (savedAssignees.some((u) => u.accountId === id)) {
+      setAssigneeLookupError('Already saved.');
+      return;
+    }
+    setAssigneeLookupLoading(true);
+    setAssigneeLookupError(null);
+    try {
+      const r = await fetch(`/api/jira/user/${encodeURIComponent(id)}`);
+      const data = await r.json() as { accountId?: string; displayName?: string; emailAddress?: string; error?: string };
+      if (!r.ok || data.error) throw new Error(data.error ?? `HTTP ${r.status}`);
+      if (!data.accountId || !data.displayName) throw new Error('Unexpected response from Jira API');
+      const user: JiraUser = { accountId: data.accountId, displayName: data.displayName, emailAddress: data.emailAddress };
+      await saveConfig({
+        ...config,
+        jira: { ...config.jira!, savedAssignees: [...savedAssignees, user] },
+      });
+      setAssigneeIdInput('');
+    } catch (err) {
+      setAssigneeLookupError(String(err));
+    } finally {
+      setAssigneeLookupLoading(false);
+    }
+  };
+
+  const handleRemoveAssignee = async (accountId: string) => {
+    await saveConfig({
+      ...config,
+      jira: { ...config.jira!, savedAssignees: savedAssignees.filter((u) => u.accountId !== accountId) },
+    });
+  };
 
   // Export / Import state
   const [importing, setImporting] = useState(false);
@@ -364,6 +405,71 @@ export function GeneralSettings() {
           </div>
         </div>
       </div>
+
+      {/* Saved Jira assignees */}
+      {config.jira?.baseUrl && (
+        <div className="border border-zinc-800 rounded-lg overflow-hidden">
+          <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
+            <p className="font-mono text-xs font-medium text-zinc-300">Saved Jira assignees</p>
+            <p className="font-mono text-xs text-zinc-500 mt-0.5">
+              These people always appear in the bulk-assign dropdown, even if they have no tickets in the current sprint.
+            </p>
+          </div>
+          <div className="px-4 py-4 bg-zinc-900 flex flex-col gap-3">
+            {/* Add by account ID */}
+            <div className="flex flex-col gap-1.5">
+              <label className="font-mono text-xs text-zinc-500">
+                Add by Jira account ID
+                <span className="ml-1.5 text-zinc-600">(from the user's Atlassian profile URL)</span>
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={assigneeIdInput}
+                  onChange={(e) => { setAssigneeIdInput(e.target.value); setAssigneeLookupError(null); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleAddAssignee(); }}
+                  placeholder="712020:abc123..."
+                  spellCheck={false}
+                  className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 flex-1 max-w-xs"
+                />
+                <button
+                  className="btn-secondary text-xs"
+                  onClick={handleAddAssignee}
+                  disabled={!assigneeIdInput.trim() || assigneeLookupLoading}
+                >
+                  {assigneeLookupLoading ? 'Looking up…' : '+ Add'}
+                </button>
+              </div>
+              {assigneeLookupError && (
+                <p className="font-mono text-xs text-red-400">{assigneeLookupError}</p>
+              )}
+            </div>
+
+            {/* Saved list */}
+            {savedAssignees.length > 0 ? (
+              <div className="flex flex-col gap-1">
+                {savedAssignees.map((u) => (
+                  <div key={u.accountId} className="flex items-center justify-between gap-2 bg-zinc-800 border border-zinc-700 rounded px-3 py-2">
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-mono text-xs text-zinc-100 truncate">{u.displayName}</span>
+                      <span className="font-mono text-[10px] text-zinc-500 truncate">{u.accountId}</span>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveAssignee(u.accountId)}
+                      className="font-mono text-[10px] text-zinc-500 hover:text-red-400 transition-colors shrink-0"
+                      title="Remove"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="font-mono text-xs text-zinc-600 italic">No saved assignees yet.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Export / Import ──────────────────────────────── */}
       <div className="border border-zinc-800 rounded-lg overflow-hidden">
