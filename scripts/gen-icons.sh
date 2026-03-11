@@ -1,17 +1,19 @@
 #!/bin/bash
-# Regenerates all icon sizes from build/icon.iconset/icon_1024x1024.png
+# Regenerates all icon sizes from client/src/icon/launch.png
 # and rebuilds build/icon.icns.
 # Usage: bash scripts/gen-icons.sh
 
 set -e
 
-SRC="build/icon.iconset/icon_1024x1024.png"
+SRC="client/src/icon/launch.png"
 ICONSET="build/icon.iconset"
 
 if [ ! -f "$SRC" ]; then
-  echo "ERROR: $SRC not found. Save the source 1024×1024 PNG there first."
+  echo "ERROR: $SRC not found."
   exit 1
 fi
+
+mkdir -p "$ICONSET"
 
 echo "Generating icon sizes from $SRC…"
 
