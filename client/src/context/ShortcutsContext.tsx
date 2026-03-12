@@ -25,7 +25,36 @@ function defaultShortcuts(): Record<string, string> {
   // navigate-0 → '1', navigate-1 → '2', … navigate-8 → '9'
   const map: Record<string, string> = {};
   for (let i = 0; i < 9; i++) map[`navigate-${i}`] = String(i + 1);
+  // Mouse 4 (back button) / Mouse 5 (forward button) by default
+  map['nav-back']    = 'Mouse4';
+  map['nav-forward'] = 'Mouse5';
   return map;
+}
+
+// ── mouse button helpers ───────────────────────────────────────────────────
+
+/**
+ * Converts a JS MouseEvent.button index to the stored shortcut label.
+ * button 0=left, 1=middle, 2=right, 3=back(Mouse4), 4=forward(Mouse5)
+ * We only encode buttons ≥ 2 to avoid conflicts with normal clicks.
+ */
+export function mouseButtonToLabel(button: number): string | null {
+  if (button < 2) return null;
+  return `Mouse${button + 1}`;
+}
+
+/** Returns the JS button index for a stored label like "Mouse4", or null. */
+export function labelToMouseButton(label: string): number | null {
+  if (!label.startsWith('Mouse')) return null;
+  const n = parseInt(label.slice(5), 10);
+  if (isNaN(n)) return null;
+  return n - 1;
+}
+
+/** Human-readable display string for a bound key/button. */
+export function displayBinding(value: string): string {
+  if (value.startsWith('Mouse')) return value.replace('Mouse', 'Mouse ');
+  return value;
 }
 
 function load(): Record<string, string> {

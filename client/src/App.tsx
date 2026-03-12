@@ -1,6 +1,6 @@
 import { useView } from './context/ViewContext';
 import { useConfig } from './context/ConfigContext';
-import { ShortcutsProvider } from './context/ShortcutsContext';
+import { ShortcutsProvider, useShortcuts, labelToMouseButton } from './context/ShortcutsContext';
 import { NavBar } from './components/NavBar';
 import { Toast } from './components/Toast';
 import { ProjectsView } from './views/ProjectsView';
@@ -11,14 +11,34 @@ import { SettingsView } from './views/SettingsView';
 import { useState, useEffect } from 'react';
 
 function AppShellInner() {
-  const { activeView } = useView();
+  const { activeView, navigateBack, navigateForward, canGoBack, canGoForward } = useView();
   const { error } = useConfig();
+  const { shortcuts } = useShortcuts();
   const [toast, setToast] = useState<string | null>(null);
 
   // Surface config errors as toasts
   useEffect(() => {
     if (error) setToast(error);
   }, [error]);
+
+  // Global mouse-button navigation (Mouse 4 = back, Mouse 5 = forward by default)
+  useEffect(() => {
+    const backButton  = labelToMouseButton(shortcuts['nav-back']    ?? '');
+    const fwdButton   = labelToMouseButton(shortcuts['nav-forward'] ?? '');
+
+    const handler = (e: MouseEvent) => {
+      if (backButton !== null && e.button === backButton && canGoBack) {
+        e.preventDefault();
+        navigateBack();
+      } else if (fwdButton !== null && e.button === fwdButton && canGoForward) {
+        e.preventDefault();
+        navigateForward();
+      }
+    };
+
+    window.addEventListener('mousedown', handler);
+    return () => window.removeEventListener('mousedown', handler);
+  }, [shortcuts, navigateBack, navigateForward, canGoBack, canGoForward]);
 
   return (
     <div className="h-full flex flex-col">
