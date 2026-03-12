@@ -203,8 +203,10 @@ router.get('/issues', async (req: Request, res: Response) => {
 
     let response = await postSearch(sprintBody);
 
-    // 400 usually means openSprints() isn't supported (Kanban / next-gen) — retry without sprint filter
-    if (response.status === 400) {
+    // 400 = openSprints() not supported (Kanban / next-gen board)
+    // 410 = sprint JQL function removed for this project type
+    // Any other non-ok status from the sprint query → fall back to open-issues query
+    if (!response.ok) {
       response = await postSearch(fallbackBody);
     }
 
