@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useConfig } from '../../context/ConfigContext';
 import { useShortcuts, mouseButtonToLabel, displayBinding } from '../../context/ShortcutsContext';
+import { SettingsHeader } from '../../components/SettingsHeader';
 
 // Keys that should be ignored for binding (modifier-only presses, etc.)
 const IGNORED_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab']);
@@ -87,17 +88,15 @@ export function ShortcutsSettings() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-mono font-medium text-zinc-100 text-sm">Shortcuts</h2>
-          <p className="font-mono text-xs text-zinc-500 mt-0.5">
-            Click a key badge to re-bind it, then press any key or mouse button. Press Esc to cancel.
-          </p>
-        </div>
-        <button className="btn-secondary" onClick={resetShortcuts}>
-          Reset to defaults
-        </button>
-      </div>
+      <SettingsHeader
+        title="Shortcuts"
+        description="Click a key badge to re-bind it, then press any key or mouse button. Press Esc to cancel."
+        actions={
+          <button className="btn-secondary" onClick={resetShortcuts}>
+            Reset to defaults
+          </button>
+        }
+      />
 
       {/* ── Navigation ───────────────────────────────────────── */}
       <div>

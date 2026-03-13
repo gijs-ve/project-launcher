@@ -7,6 +7,7 @@ import { ProjectsSettings } from './settings/ProjectsSettings';
 import { LinksSettings } from './settings/LinksSettings';
 import { ShortcutsSettings } from './settings/ShortcutsSettings';
 import { GeneralSettings } from './settings/GeneralSettings';
+import { TempoSettings } from './settings/TempoSettings';
 
 // ── hub tile ───────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ export function SettingsView() {
   if (settingsTab === 'links')     return <div className="flex-1 min-h-0 flex flex-col"><LinksSettings /></div>;
   if (settingsTab === 'shortcuts') return <div className="flex-1 min-h-0 flex flex-col"><ShortcutsSettings /></div>;
   if (settingsTab === 'general')   return <div className="flex-1 overflow-y-auto"><GeneralSettings /></div>;
+  if (settingsTab === 'tempo')     return <div className="flex-1 min-h-0 flex flex-col"><TempoSettings /></div>;
 
   // Hub / landing page
   const tiles: { tab: SettingsTab; icon: string; label: string; description: string }[] = [
@@ -73,6 +75,12 @@ export function SettingsView() {
       label: 'General',
       description: 'Set the editor command used by the Code button on each project card.',
     },
+    {
+      tab: 'tempo',
+      icon: '⏱️',
+      label: 'Quick Log',
+      description: 'Configure one-click time entry favorites for the Hours view.',
+    },
   ];
 
   return (
@@ -81,7 +89,7 @@ export function SettingsView() {
         <h1 className="font-mono font-semibold text-zinc-100 text-base">Settings</h1>
         <p className="font-mono text-xs text-zinc-500 mt-1">Choose a section to configure.</p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-8 gap-4 max-w-3xl">
         {tiles.map((t) => (
           <HubTile
             key={t.tab}

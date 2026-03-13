@@ -78,11 +78,52 @@ export interface JiraCredentials {
   savedAssignees?: JiraUser[];
 }
 
+export interface TempoFavorite {
+  /** Unique ID (string timestamp). */
+  id: string;
+  /** Label shown in the quick-log dropdown, e.g. "Stand-up". */
+  label: string;
+  /** Jira issue key, e.g. "PROJ-42". */
+  ticketKey: string;
+  /** Resolved numeric Jira issue ID (cached to avoid repeated API calls). */
+  ticketId?: number;
+  /** Duration in minutes to log on one click. */
+  minutes: number;
+}
+
+export interface TempoConfig {
+  apiToken: string;
+  /** Default worklog description used when none is entered (required by Tempo). */
+  defaultDescription?: string;
+  /** Quick-log favorites: one-click time entries for frequently used tickets. */
+  favorites?: TempoFavorite[];
+}
+
 export interface Config {
   projects: Project[];
   links: Link[];
   codeEditor?: string;
   jira?: JiraCredentials;
+  tempo?: TempoConfig;
+  /** Persistent cache of Jira numeric issue ID → issue key (e.g. "220130" → "SLODEV-1337") */
+  issueKeyCache?: Record<string, string>;
+}
+
+// ── TEMPO types ──────────────────────────────────────────────────────────────
+
+export interface TempoWorklog {
+  tempoWorklogId: number;
+  issueId: number;
+  /** Jira issue key (e.g. "ABC-123"), included when TEMPO returns it or when enriched by server. */
+  issueKey?: string;
+  timeSpentSeconds: number;
+  /** YYYY-MM-DD */
+  startDate: string;
+  description?: string;
+  author: {
+    accountId: string;
+    displayName?: string;
+  };
 }
 
 // ── Jira types ──────────────────────────────────────────────────────────────
@@ -109,6 +150,8 @@ export interface JiraIssue {
     description?: AdfNode | null;
     comment?: { comments: JiraComment[] };
     attachment?: JiraAttachment[];
+    /** Original time estimate in seconds (Jira field: timeoriginalestimate) */
+    timeoriginalestimate?: number | null;
   };
 }
 

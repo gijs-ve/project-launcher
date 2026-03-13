@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
-export type View = 'projects' | 'links' | 'settings' | 'project-detail' | 'jira-ticket-detail';
-export type SettingsTab = 'projects' | 'links' | 'shortcuts' | 'general';
+export type View = 'projects' | 'hours' | 'settings' | 'project-detail' | 'jira-ticket-detail';
+export type SettingsTab = 'projects' | 'links' | 'shortcuts' | 'general' | 'tempo';
 
 interface NavState {
   activeView: View;
@@ -29,7 +29,7 @@ interface ViewContextValue {
   settingsTab: SettingsTab | null;
   setSettingsTab: (tab: SettingsTab | null) => void;
   selectedJiraIssueKey: string | null;
-  navigateToJiraIssue: (issueKey: string) => void;
+  navigateToJiraIssue: (issueKey: string, projectId?: string) => void;
 }
 
 const INITIAL: NavState = {
@@ -62,8 +62,8 @@ export function ViewProvider({ children }: { children: ReactNode }) {
     push({ activeView: 'project-detail', selectedProjectId: id, selectedJiraIssueKey: null, settingsTab: null });
   };
 
-  const navigateToJiraIssue = (issueKey: string) => {
-    push({ ...nav.current, activeView: 'jira-ticket-detail', selectedJiraIssueKey: issueKey });
+  const navigateToJiraIssue = (issueKey: string, projectId?: string) => {
+    push({ ...nav.current, activeView: 'jira-ticket-detail', selectedJiraIssueKey: issueKey, selectedProjectId: projectId ?? nav.current.selectedProjectId });
   };
 
   const navigateToRoot = () => {

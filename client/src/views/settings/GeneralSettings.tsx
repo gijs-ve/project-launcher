@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useConfig } from '../../context/ConfigContext';
-import { JiraCredentials, Config, JiraUser } from '../../types';
+import { JiraCredentials, TempoConfig, Config, JiraUser } from '../../types';
+import { SettingsHeader } from '../../components/SettingsHeader';
 
 interface KnownEditor {
   label: string;
@@ -44,6 +45,12 @@ export function GeneralSettings() {
   const [jiraApiToken, setJiraApiToken] = useState(() => config.jira?.apiToken ?? '');
   const [jiraSaved, setJiraSaved]       = useState(false);
   const [jiraError, setJiraError]       = useState<string | null>(null);
+
+  // TEMPO
+  const [tempoApiToken, setTempoApiToken] = useState(() => config.tempo?.apiToken ?? '');
+  const [tempoDefaultDescription, setTempoDefaultDescription] = useState(() => config.tempo?.defaultDescription ?? '');
+  const [tempoSaved, setTempoSaved]       = useState(false);
+  const [tempoError, setTempoError]       = useState<string | null>(null);
 
   // Saved assignees
   const [assigneeIdInput, setAssigneeIdInput] = useState('');
@@ -110,6 +117,11 @@ export function GeneralSettings() {
     setJiraApiToken(config.jira?.apiToken ?? '');
   }, [config.jira?.baseUrl, config.jira?.email, config.jira?.apiToken]);
 
+  useEffect(() => {
+    setTempoApiToken(config.tempo?.apiToken ?? '');
+    setTempoDefaultDescription(config.tempo?.defaultDescription ?? '');
+  }, [config.tempo?.apiToken, config.tempo?.defaultDescription]);
+
   const currentCommand = selection === 'known' ? dropdownValue : customValue.trim() || 'code';
   const isDirty = currentCommand !== rawCommand;
 
@@ -152,6 +164,26 @@ export function GeneralSettings() {
       setTimeout(() => setJiraSaved(false), 2000);
     } catch (err) {
       setJiraError(String(err));
+    }
+  };
+
+  const tempoIsDirty =
+    tempoApiToken.trim()           !== (config.tempo?.apiToken           ?? '') ||
+    tempoDefaultDescription.trim() !== (config.tempo?.defaultDescription ?? '');
+
+  const handleSaveTempo = async () => {
+    setTempoError(null);
+    const token   = tempoApiToken.trim();
+    const defDesc = tempoDefaultDescription.trim();
+    const tempo: TempoConfig | undefined = token
+      ? { apiToken: token, ...(defDesc ? { defaultDescription: defDesc } : {}) }
+      : undefined;
+    try {
+      await saveConfig({ ...config, tempo });
+      setTempoSaved(true);
+      setTimeout(() => setTempoSaved(false), 2000);
+    } catch (err) {
+      setTempoError(String(err));
     }
   };
 
@@ -216,12 +248,10 @@ export function GeneralSettings() {
   return (
     <div className="p-6 flex flex-col gap-6">
       {/* Header */}
-      <div>
-        <h2 className="font-mono font-medium text-zinc-100 text-sm">General</h2>
-        <p className="font-mono text-xs text-zinc-500 mt-0.5">
-          App-wide preferences.
-        </p>
-      </div>
+      <SettingsHeader
+        title="General"
+        description="App-wide preferences: editor, Jira and Tempo credentials."
+      />
 
       {/* Editor command section */}
       <div className="border border-zinc-800 rounded-lg overflow-hidden">
@@ -325,7 +355,7 @@ export function GeneralSettings() {
       {/* Jira credentials section */}
       <div className="border border-zinc-800 rounded-lg overflow-hidden">
         <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
-          <p className="font-mono text-xs font-medium text-zinc-300">Jira credentials</p>
+          <p className="font-mono text-xs font-medium text-zinc-300">Jira</p>
           <p className="font-mono text-xs text-zinc-500 mt-0.5">
             Used to fetch active sprint issues per project. Your API token is stored in{' '}
             <span className="text-zinc-300">launch.config.gizzyb</span> — keep that file private.
@@ -402,6 +432,70 @@ export function GeneralSettings() {
             {jiraError && (
               <p className="font-mono text-xs text-red-400">{jiraError}</p>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* TEMPO credentials */}
+      <div className="border border-zinc-800 rounded-lg overflow-hidden">
+        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
+          <p className="font-mono text-xs font-medium text-zinc-300">Tempo</p>
+          <p className="font-mono text-xs text-zinc-500 mt-0.5">
+            Used to log and retrieve hours via TEMPO. Generate an API token in TEMPO → Settings → API integration.
+            The token is stored in <span className="text-zinc-300">launch.config.gizzyb</span> — keep that file private.
+          </p>
+        </div>
+        <div className="px-4 py-4 bg-zinc-900 flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="font-mono text-xs text-zinc-500">
+              TEMPO API token{' '}
+              <a
+                href={`${config.jira?.baseUrl ?? 'https://your-domain.atlassian.net'}/plugins/servlet/ac/io.tempo.jira/tempo-app#!/configuration/api-integration`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-400 hover:text-zinc-200 underline transition-colors"
+              >
+                Generate ↗
+              </a>
+            </label>
+            <input
+              type="password"
+              value={tempoApiToken}
+              onChange={(e) => setTempoApiToken(e.target.value)}
+              placeholder="••••••••••••••••••••"
+              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="font-mono text-xs text-zinc-500">Default description</label>
+            <input
+              type="text"
+              value={tempoDefaultDescription}
+              onChange={(e) => setTempoDefaultDescription(e.target.value)}
+              placeholder="e.g. Development work"
+              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+            />
+            <p className="font-mono text-[10px] text-zinc-600">Used as worklog description when none is entered. Tempo requires a description.</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <button className="btn-primary" onClick={handleSaveTempo} disabled={!tempoIsDirty}>
+                {tempoSaved ? 'Saved ✓' : 'Save'}
+              </button>
+              {tempoIsDirty && (
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setTempoApiToken(config.tempo?.apiToken ?? '');
+                    setTempoDefaultDescription(config.tempo?.defaultDescription ?? '');
+                    setTempoError(null);
+                  }}
+                >
+                  Discard
+                </button>
+              )}
+            </div>
+            {tempoError && <p className="font-mono text-xs text-red-400">{tempoError}</p>}
           </div>
         </div>
       </div>

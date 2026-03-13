@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { useView } from '../context/ViewContext';
 import { useConfig } from '../context/ConfigContext';
-import { JiraIssue, JiraUser, JiraComment, AdfNode } from '../types';
+import { JiraIssue, JiraUser, JiraComment, AdfNode, TempoWorklog } from '../types';
 import { AssigneeChip } from '../components/AssigneeChip';
+import { WorklogAuthor } from '../components/WorklogAuthor';
 
 import { JiraAttachment } from '../types';
 
@@ -276,6 +277,265 @@ function CommentCard({ comment, isMe }: { comment: JiraComment; isMe: boolean })
   );
 }
 
+// ── Hours / TEMPO tab ────────────────────────────────────────────────────────
+
+function formatWorklogDate(dateStr: string): string {
+  try {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(year, month - 1, day));
+  } catch {
+    return dateStr;
+  }
+}
+
+function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+function HoursTab({
+  issueKey,
+  issueId,
+  currentUserAccountId,
+  originalEstimateSeconds,
+  projectId,
+}: {
+  issueKey: string;
+  issueId: string;
+  currentUserAccountId?: string;
+  originalEstimateSeconds?: number | null;
+  projectId?: string;
+}) {
+  const [worklogs, setWorklogs]         = useState<TempoWorklog[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState<string | null>(null);
+  const [timeSeconds, setTimeSeconds]   = useState(3600);
+  const [date, setDate]                 = useState(() => new Date().toISOString().split('T')[0]);
+  const [description, setDescription]  = useState('');
+  const [submitting, setSubmitting]     = useState(false);
+  const [submitError, setSubmitError]   = useState<string | null>(null);
+  const [deletingId, setDeletingId]     = useState<number | null>(null);
+  const [deleteError, setDeleteError]   = useState<string | null>(null);
+
+  const fetchWorklogs = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const r = await fetch(`/api/tempo/worklogs?issueId=${encodeURIComponent(issueId)}`);
+      if (!r.ok) {
+        let msg = `HTTP ${r.status}`;
+        try { msg = ((await r.json()) as { error?: string }).error ?? msg; } catch {}
+        throw new Error(msg);
+      }
+      let data: { results?: TempoWorklog[] };
+      try { data = await r.json() as { results?: TempoWorklog[] }; }
+      catch { throw new Error('Server returned HTML instead of JSON — install the latest build of the app'); }
+      setWorklogs(data.results ?? []);
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [issueId]);
+
+  useEffect(() => { fetchWorklogs(); }, [fetchWorklogs]);
+
+  const adjustTime = (deltaSeconds: number) => {
+    setTimeSeconds((t) => Math.max(0, t + deltaSeconds));
+  };
+
+  const handleSubmit = async () => {
+    setSubmitError(null);
+    if (timeSeconds < 60) { setSubmitError('Select at least 1 minute'); return; }
+    if (!currentUserAccountId) { setSubmitError('Jira account not found — check General Settings'); return; }
+
+    setSubmitting(true);
+    try {
+      const r = await fetch('/api/tempo/worklogs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          issueId: parseInt(issueId, 10),
+          authorAccountId: currentUserAccountId,
+          timeSpentSeconds: timeSeconds,
+          startDate: date,
+          description,
+        }),
+      });
+      if (!r.ok) {
+        let msg = `HTTP ${r.status}`;
+        try { msg = ((await r.json()) as { error?: string }).error ?? msg; } catch {}
+        throw new Error(msg);
+      }
+      setTimeSeconds(3600);
+      setDescription('');
+      fetchWorklogs();
+    } catch (err) {
+      setSubmitError(String(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    setDeleteError(null);
+    setDeletingId(id);
+    try {
+      const r = await fetch(`/api/tempo/worklogs/${id}`, { method: 'DELETE' });
+      if (!r.ok) {
+        let msg = `HTTP ${r.status}`;
+        try { msg = ((await r.json()) as { error?: string }).error ?? msg; } catch {}
+        throw new Error(msg);
+      }
+      fetchWorklogs();
+    } catch (err) {
+      setDeleteError(String(err));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const totalSeconds = worklogs.reduce((sum, w) => sum + w.timeSpentSeconds, 0);
+  const sortedWorklogs = [...worklogs].sort((a, b) => b.startDate.localeCompare(a.startDate));
+
+  return (
+    <div className="px-6 py-6 flex flex-col gap-6 max-w-5xl mx-auto">
+
+      {/* ── Log Time form ─────────────────────────────── */}
+      <div className="flex flex-col gap-3 bg-zinc-900 border border-zinc-800 rounded-lg p-4 max-w-xl">
+        <h2 className="font-mono text-xs font-medium text-zinc-400 uppercase tracking-widest">Log Time</h2>
+
+        {/* Time display */}
+        <div className="text-center font-mono text-3xl font-bold text-zinc-100 py-1">
+          {timeSeconds < 60 ? <span className="text-zinc-600">0m</span> : formatDuration(timeSeconds)}
+        </div>
+
+        {/* Adjustment buttons */}
+        <div className="grid grid-cols-4 gap-2">
+          {([[-3600, '−1h'], [-900, '−15m'], [900, '+15m'], [3600, '+1h']] as const).map(([delta, label]) => (
+            <button
+              key={label}
+              onClick={() => adjustTime(delta)}
+              className="btn-secondary text-xs py-2"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Date picker */}
+        <div className="flex items-center gap-3">
+          <label className="font-mono text-xs text-zinc-400 w-20 shrink-0">Date</label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="input flex-1"
+          />
+        </div>
+
+        {/* Description */}
+        <div className="flex items-center gap-3">
+          <label className="font-mono text-xs text-zinc-400 w-20 shrink-0">Note</label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Optional…"
+            className="input flex-1"
+          />
+        </div>
+
+        {submitError && <p className="font-mono text-xs text-red-400">{submitError}</p>}
+
+        <button
+          onClick={handleSubmit}
+          disabled={submitting || timeSeconds < 60}
+          className="btn-primary"
+        >
+          {submitting ? 'Logging…' : 'Submit'}
+        </button>
+      </div>
+
+      {/* ── Logged worklogs ───────────────────────────── */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <h2 className="font-mono text-xs font-medium text-zinc-400 uppercase tracking-widest">
+            Logged Hours
+          </h2>
+          <div className="flex items-center gap-3">
+            {originalEstimateSeconds != null && originalEstimateSeconds > 0 && (
+              <span className="font-mono text-xs text-zinc-500">
+                Est: {formatDuration(originalEstimateSeconds)}
+              </span>
+            )}
+            {!loading && worklogs.length > 0 && (
+              <span className="font-mono text-xs text-zinc-500">
+                Total: {formatDuration(totalSeconds)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {loading && <p className="font-mono text-xs text-zinc-500">Loading…</p>}
+
+        {!loading && error && (
+          <div className="bg-zinc-900 border border-red-900 rounded-lg p-3">
+            <p className="font-mono text-xs text-red-400">{error}</p>
+          </div>
+        )}
+
+        {!loading && !error && worklogs.length === 0 && (
+          <p className="font-mono text-xs text-zinc-600">No hours logged yet.</p>
+        )}
+
+        {deleteError && <p className="font-mono text-xs text-red-400">{deleteError}</p>}
+
+        {!loading && !error && sortedWorklogs.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            {sortedWorklogs.map((w) => (
+              <div
+                key={w.tempoWorklogId}
+                className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2"
+              >
+                <span className="font-mono text-xs text-zinc-500 shrink-0 w-24">
+                  {formatWorklogDate(w.startDate)}
+                </span>
+                <span className="font-mono text-sm font-semibold text-zinc-100 w-16 shrink-0">
+                  {formatDuration(w.timeSpentSeconds)}
+                </span>
+                <span className="w-fit shrink-0 overflow-visible">
+                  <WorklogAuthor
+                    accountId={w.author.accountId}
+                    tempoDisplayName={w.author.displayName}
+                    projectId={projectId}
+                  />
+                </span>
+                {w.description && (
+                  <span className="font-mono text-xs text-zinc-600 truncate flex-1 italic">
+                    {w.description}
+                  </span>
+                )}
+                <button
+                  onClick={() => handleDelete(w.tempoWorklogId)}
+                  disabled={deletingId === w.tempoWorklogId}
+                  className="btn-danger px-2 py-0.5 text-xs shrink-0 ml-auto"
+                  title="Delete worklog"
+                >
+                  {deletingId === w.tempoWorklogId ? '…' : 'Delete'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main view ────────────────────────────────────────────────────────────────
 
 export function JiraTicketDetailView() {
@@ -286,6 +546,7 @@ export function JiraTicketDetailView() {
   const [currentUser, setCurrentUser] = useState<JiraUser | null>(null);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'details' | 'hours'>('details');
 
   const project = config.projects.find((p) => p.id === selectedProjectId);
 
@@ -306,8 +567,13 @@ export function JiraTicketDetailView() {
 
     Promise.all([
       fetch(`/api/jira/issue/${key}?projectId=${pid}`).then(async (r) => {
+        if (!r.ok) {
+          let msg = `HTTP ${r.status}`;
+          try { msg = ((await r.json()) as { error?: string }).error ?? msg; } catch {}
+          throw new Error(msg);
+        }
         const data = await r.json() as { issue?: JiraIssue; error?: string };
-        if (!r.ok || data.error) throw new Error(data.error ?? `HTTP ${r.status}`);
+        if (data.error) throw new Error(data.error);
         return data.issue ?? null;
       }),
       fetch(`/api/jira/me?projectId=${pid}`)
@@ -339,7 +605,7 @@ export function JiraTicketDetailView() {
       <div className="flex-1 overflow-y-auto">
 
         {/* ── Header ──────────────────────────────────────── */}
-        <div className="border-b border-zinc-800 px-6 pt-5 pb-4">
+        <div className="border-b border-zinc-800 px-6 pt-5 pb-0">
           <button
             onClick={navigateBack}
             className="flex items-center gap-1.5 text-xs font-mono text-zinc-500 hover:text-zinc-300 transition-colors mb-4"
@@ -387,9 +653,30 @@ export function JiraTicketDetailView() {
               </div>
             </div>
           )}
+
+          {/* ── Tab bar ────────────────────────────────── */}
+          {!loading && !error && issue && (
+            <div className="flex mt-4">
+              {(['details', 'hours'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={[
+                    'font-mono text-xs px-4 py-2 border-b-2 -mb-px transition-colors capitalize',
+                    activeTab === tab
+                      ? 'border-blue-500 text-zinc-100'
+                      : 'border-transparent text-zinc-500 hover:text-zinc-300',
+                  ].join(' ')}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {!loading && !error && issue && (
+          activeTab === 'details' ? (
           <div className="px-6 py-6 flex flex-col gap-6">
 
             {/* ── Meta grid ─────────────────────────────── */}
@@ -464,6 +751,15 @@ export function JiraTicketDetailView() {
             )}
 
           </div>
+          ) : (
+            <HoursTab
+              issueKey={selectedJiraIssueKey!}
+              issueId={issue.id}
+              currentUserAccountId={currentUser?.accountId}
+              originalEstimateSeconds={f?.timeoriginalestimate}
+              projectId={selectedProjectId ?? undefined}
+            />
+          )
         )}
 
       </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useConfig } from '../../context/ConfigContext';
 import { Project } from '../../types';
 import { ProjectFields, ProjectDraft, projectToDraft, isDraftDirty, DEFAULT_COLOR } from './ProjectFields';
+import { SettingsHeader } from '../../components/SettingsHeader';
 
 function toId(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -116,25 +117,28 @@ export function ProjectsSettings() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-mono font-medium text-zinc-100 text-sm">Projects</h2>
-        <div className="flex items-center gap-2">
-          {hasDirty && (
-            <span className="font-mono text-xs text-amber-400">{dirtyIds.length} unsaved</span>
-          )}
-          {hasDirty && (
-            <button className="btn-primary" onClick={saveAll} disabled={saving}>
-              {saving ? 'Saving…' : `● Save all (${dirtyIds.length})`}
+      <SettingsHeader
+        title="Projects"
+        description="Add, edit and remove dev projects."
+        actions={
+          <>
+            {hasDirty && (
+              <span className="font-mono text-xs text-amber-400">{dirtyIds.length} unsaved</span>
+            )}
+            {hasDirty && (
+              <button className="btn-primary" onClick={saveAll} disabled={saving}>
+                {saving ? 'Saving…' : `● Save all (${dirtyIds.length})`}
+              </button>
+            )}
+            <button
+              className="btn-secondary"
+              onClick={() => { setAddingProject(true); setNewDraft({ ...BLANK_DRAFT }); }}
+            >
+              + Add
             </button>
-          )}
-          <button
-            className="btn-secondary"
-            onClick={() => { setAddingProject(true); setNewDraft({ ...BLANK_DRAFT }); }}
-          >
-            + Add
-          </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {addingProject && (
         <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4">

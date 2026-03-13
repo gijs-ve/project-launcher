@@ -3,7 +3,7 @@ import { useConfig } from '../context/ConfigContext';
 
 const NAV_ITEMS: { view: View; label: string }[] = [
   { view: 'projects', label: 'Projects' },
-  { view: 'links', label: 'Links' },
+  { view: 'hours', label: 'Hours' },
   { view: 'settings', label: 'Settings' },
 ];
 
@@ -12,6 +12,7 @@ const SETTINGS_TAB_LABELS: Record<SettingsTab, string> = {
   links: 'Links',
   shortcuts: 'Shortcuts',
   general: 'General',
+  tempo: 'Quick Log',
 };
 
 export function NavBar() {

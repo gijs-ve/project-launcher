@@ -365,4 +365,74 @@ router.put('/assign/:issueKey', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/jira/search?q=text&projectId=...&maxResults=10
+// Full-text JQL search returning lightweight issue summaries for typeahead / ticket pickers.
+router.get('/search', async (req: Request, res: Response) => {
+  try {
+    const { q, projectId, maxResults: maxStr } = req.query as { q?: string; projectId?: string; maxResults?: string };
+    if (!q?.trim()) { res.status(400).json({ error: 'q query param is required' }); return; }
+
+    const ctx = resolveJiraContext(projectId);
+    if ('error' in ctx) { res.status(400).json({ error: ctx.error }); return; }
+
+    const maxResults = Math.min(Math.max(1, parseInt(maxStr ?? '10', 10) || 10), 50);
+
+    // Escape characters that are special in JQL string values
+    const safeQ = q.trim().replace(/[~"\\]/g, (c) => `\\${c}`).slice(0, 100);
+    const jql = `text ~ "${safeQ}" ORDER BY updated DESC`;
+
+    const response = await fetch(`${ctx.baseUrl}/rest/api/3/search/jql`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${ctx.auth}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jql,
+        fields: ['summary', 'status', 'issuetype'],
+        maxResults,
+      }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      res.status(response.status).json({ error: `Jira API error ${response.status}: ${text.slice(0, 200)}` }); return;
+    }
+
+    const data = await response.json() as { issues?: Array<{ id: string; key: string; fields: { summary: string } }> };
+    res.json({ issues: data.issues ?? [] });
+  } catch (err) {
+    res.status(502).json({ error: `Jira proxy error: ${String(err)}` });
+  }
+});
+
+// GET /api/jira/issue-id/:issueKey
+// Returns the numeric Jira issue ID for a given issue key (e.g. "SLODEV-42" → 218444).
+// Used to resolve the stand-up ticket's numeric ID for Tempo POST requests.
+router.get('/issue-id/:issueKey', async (req: Request, res: Response) => {
+  try {
+    const issueKey = String(req.params.issueKey);
+    // Validate key format to prevent injection (letters-digits-hyphen only)
+    if (!/^[A-Za-z0-9]+-\d+$/.test(issueKey)) {
+      res.status(400).json({ error: 'Invalid issue key format' }); return;
+    }
+    const ctx = resolveJiraContext();
+    if ('error' in ctx) { res.status(400).json({ error: ctx.error }); return; }
+
+    const r = await fetch(
+      `${ctx.baseUrl}/rest/api/3/issue/${encodeURIComponent(issueKey)}?fields=summary`,
+      { headers: { Authorization: `Basic ${ctx.auth}`, Accept: 'application/json' } },
+    );
+    if (!r.ok) {
+      const text = await r.text();
+      res.status(r.status).json({ error: `Jira API error ${r.status}: ${text.slice(0, 200)}` }); return;
+    }
+    const data = await r.json() as { id: string; key: string; fields: { summary: string } };
+    res.json({ id: parseInt(data.id, 10), key: data.key, summary: data.fields?.summary });
+  } catch (err) {
+    res.status(502).json({ error: `Jira proxy error: ${String(err)}` });
+  }
+});
+
 export default router;

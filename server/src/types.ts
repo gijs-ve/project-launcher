@@ -35,11 +35,28 @@ export interface JiraCredentials {
   baseUrl?: string;
 }
 
+export interface TempoFavorite {
+  id: string;
+  label: string;
+  ticketKey: string;
+  ticketId?: number;
+  minutes: number;
+}
+
+export interface TempoConfig {
+  apiToken: string;
+  defaultDescription?: string;
+  favorites?: TempoFavorite[];
+}
+
 export interface Config {
   projects: Project[];
   links: Link[];
   codeEditor?: string;
   jira?: JiraCredentials;
+  tempo?: TempoConfig;
+  /** Persistent cache of Jira numeric issue ID → issue key (e.g. "220130" → "SLODEV-1337") */
+  issueKeyCache?: Record<string, string>;
 }
 
 // WebSocket message types — Server → Client

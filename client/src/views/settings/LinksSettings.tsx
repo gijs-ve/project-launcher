@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useConfig } from '../../context/ConfigContext';
 import { Link } from '../../types';
 import { LinkForm } from './LinkForm';
+import { SettingsHeader } from '../../components/SettingsHeader';
 
 export function LinksSettings() {
   const { config, deleteLink, loading } = useConfig();
@@ -19,12 +20,15 @@ export function LinksSettings() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-mono font-medium text-zinc-100 text-sm">Links</h2>
-        <button className="btn-primary" onClick={() => setEditingLink({ item: null })}>
-          + Add
-        </button>
-      </div>
+      <SettingsHeader
+        title="Links"
+        description="Global links shown in the Links tab — useful for staging environments, dashboards, etc."
+        actions={
+          <button className="btn-primary" onClick={() => setEditingLink({ item: null })}>
+            + Add
+          </button>
+        }
+      />
 
       {editingLink?.item === null && (
         <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4">

@@ -157,7 +157,7 @@ export function ProjectDetailView() {
 
           {/* Start command */}
           <Section title="Start command">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
+            <div className="bg-zinc-900 h-full border border-zinc-800 rounded-lg p-3">
               <code className="font-mono text-sm text-emerald-400 break-all">{project.command}</code>
             </div>
           </Section>
@@ -183,7 +183,7 @@ export function ProjectDetailView() {
           <Section title="Colour">
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex items-center gap-3">
               <span
-                className="w-8 h-8 rounded-md border border-zinc-700 shrink-0"
+                className="w-8 h-6 rounded-md border border-zinc-700 shrink-0"
                 style={{ backgroundColor: project.color }}
               />
               <code className="font-mono text-xs text-zinc-400">{project.color}</code>

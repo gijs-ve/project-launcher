@@ -6,7 +6,7 @@ import { Toast } from './components/Toast';
 import { ProjectsView } from './views/ProjectsView';
 import { ProjectDetailView } from './views/ProjectDetailView';
 import { JiraTicketDetailView } from './views/JiraTicketDetailView';
-import { LinksView } from './views/LinksView';
+import { HoursView } from './views/HoursView';
 import { SettingsView } from './views/SettingsView';
 import { useState, useEffect } from 'react';
 
@@ -48,7 +48,7 @@ function AppShellInner() {
       {activeView === 'projects'            && <ProjectsView />}
       {activeView === 'project-detail'       && <ProjectDetailView />}
       {activeView === 'jira-ticket-detail'   && <JiraTicketDetailView />}
-      {activeView === 'links'                && <LinksView />}
+      {activeView === 'hours'                 && <HoursView />}
       {activeView === 'settings'             && <SettingsView />}
 
       {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
