@@ -1,6 +1,7 @@
 import * as pty from 'node-pty';
 import { WebSocket } from 'ws';
 import { Project, ProjectStatus, ServerMessage } from './types.js';
+import { readConfig } from './config.js';
 
 export interface LaunchOptions {
   /** Extra arguments appended to the command string (e.g. "-- --experimental-https") */
@@ -204,6 +205,26 @@ class ProcessManager {
     const msg: ServerMessage = { type: 'status-update', projectId, status };
     for (const ws of this.allClients) {
       this.send(ws, msg);
+    }
+
+    // Notify Teams channel on notable status changes
+    if (status === 'errored' || status === 'running' || status === 'stopped') {
+      const cfg = readConfig();
+      if (cfg.teamsWebhookUrl) {
+        const icons: Record<string, string> = { running: '🟢', stopped: '⚪', errored: '🔴' };
+        const colors: Record<string, string> = { running: '00B300', stopped: '808080', errored: 'CC0000' };
+        fetch(cfg.teamsWebhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            '@type': 'MessageCard',
+            '@context': 'http://schema.org/extensions',
+            summary: `${projectId} is ${status}`,
+            themeColor: colors[status] ?? '808080',
+            title: `${icons[status] ?? '•'} Launch: ${projectId} is ${status}`,
+          }),
+        }).catch((err) => console.error('[Teams] webhook error:', err));
+      }
     }
   }
 

@@ -57,6 +57,8 @@ export interface Config {
   tempo?: TempoConfig;
   /** Persistent cache of Jira numeric issue ID → issue key (e.g. "220130" → "SLODEV-1337") */
   issueKeyCache?: Record<string, string>;
+  /** Microsoft Teams Incoming Webhook URL for notifications */
+  teamsWebhookUrl?: string;
 }
 
 // WebSocket message types — Server → Client

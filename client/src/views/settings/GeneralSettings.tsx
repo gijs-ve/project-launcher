@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useConfig } from '../../context/ConfigContext';
 import { JiraCredentials, TempoConfig, Config, JiraUser } from '../../types';
 import { SettingsHeader } from '../../components/SettingsHeader';
+import { SettingsCollapsibleSection } from '../../components/SettingsCollapsibleSection';
 
 interface KnownEditor {
   label: string;
@@ -246,363 +247,321 @@ export function GeneralSettings() {
   };
 
   return (
-    <div className="p-6 flex flex-col gap-6">
+    <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
       {/* Header */}
       <SettingsHeader
         title="General"
-        description="App-wide preferences: editor, Jira and Tempo credentials."
+        description="Configure your editor, connect Jira, and set up time tracking."
       />
 
-      {/* Editor command section */}
-      <div className="border border-zinc-800 rounded-lg overflow-hidden">
-        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
-          <p className="font-mono text-xs font-medium text-zinc-300">Editor command</p>
-          <p className="font-mono text-xs text-zinc-500 mt-0.5">
-            Command used by the <span className="text-zinc-300">Code</span> button on each project card to open the project in your editor.
-          </p>
+      {/* ── Editor command ──────────────────────────────────── */}
+      <SettingsCollapsibleSection
+        title="Editor command"
+        description="Choose which editor opens when you click the Code button on a project."
+        hint={currentCommand || 'code'}
+        dirty={isDirty}
+        defaultOpen
+      >
+        {/* Mode toggle */}
+        <div className="flex gap-2">
+          <button
+            className={[
+              'btn-secondary text-xs',
+              selection === 'known' ? 'bg-zinc-700 text-zinc-100' : '',
+            ].join(' ')}
+            onClick={() => setSelection('known')}
+          >
+            Preset editor
+          </button>
+          <button
+            className={[
+              'btn-secondary text-xs',
+              selection === 'custom' ? 'bg-zinc-700 text-zinc-100' : '',
+            ].join(' ')}
+            onClick={() => setSelection('custom')}
+          >
+            Custom command
+          </button>
         </div>
 
-        <div className="px-4 py-4 bg-zinc-900 flex flex-col gap-4">
-          {/* Mode toggle */}
-          <div className="flex gap-2">
-            <button
-              className={[
-                'btn-secondary text-xs',
-                selection === 'known' ? 'bg-zinc-700 text-zinc-100' : '',
-              ].join(' ')}
-              onClick={() => setSelection('known')}
+        {selection === 'known' && (
+          <div className="flex flex-col gap-1.5">
+            <label className="font-mono text-xs text-zinc-500">Select editor</label>
+            <select
+              value={dropdownValue}
+              onChange={(e) => setDropdownValue(e.target.value)}
+              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 max-w-xs"
             >
-              Preset editor
-            </button>
-            <button
-              className={[
-                'btn-secondary text-xs',
-                selection === 'custom' ? 'bg-zinc-700 text-zinc-100' : '',
-              ].join(' ')}
-              onClick={() => setSelection('custom')}
-            >
-              Custom command
-            </button>
+              {KNOWN_EDITORS.map((e) => (
+                <option key={e.command} value={e.command}>
+                  {e.label} — {e.command}
+                </option>
+              ))}
+            </select>
           </div>
+        )}
 
-          {/* Known editors dropdown */}
-          {selection === 'known' && (
-            <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-xs text-zinc-500">Select editor</label>
-              <select
-                value={dropdownValue}
-                onChange={(e) => setDropdownValue(e.target.value)}
-                className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 max-w-xs"
+        {selection === 'custom' && (
+          <div className="flex flex-col gap-1.5">
+            <label className="font-mono text-xs text-zinc-500">
+              Command{' '}
+              <span className="text-zinc-600">(e.g. <code className="text-zinc-400">cursor</code> or <code className="text-zinc-400">code --new-window</code>)</span>
+            </label>
+            <input
+              type="text"
+              value={customValue}
+              onChange={(e) => setCustomValue(e.target.value)}
+              placeholder="code"
+              spellCheck={false}
+              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+            />
+          </div>
+        )}
+
+        <p className="font-mono text-xs text-zinc-600">
+          Will run:{' '}
+          <code className="text-zinc-400">
+            {currentCommand || 'code'} &lt;project-path&gt;
+          </code>
+        </p>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <button className="btn-primary" onClick={handleSave} disabled={!isDirty}>
+              {saved ? 'Saved!' : 'Save'}
+            </button>
+            {isDirty && (
+              <button className="btn-secondary" onClick={handleDiscard}>
+                Discard
+              </button>
+            )}
+          </div>
+          {saveError && <p className="font-mono text-xs text-red-400">{saveError}</p>}
+        </div>
+      </SettingsCollapsibleSection>
+
+      {/* ── Jira ────────────────────────────────────────────── */}
+      <SettingsCollapsibleSection
+        title="Jira"
+        description="Connect to your Jira workspace to load sprint tickets and assignees for each project."
+        hint={config.jira?.baseUrl ? (() => { try { return new URL(config.jira!.baseUrl!).hostname; } catch { return config.jira!.baseUrl; } })() : undefined}
+        dirty={jiraIsDirty}
+        defaultOpen={!!(config.jira?.apiToken || config.jira?.email)}
+      >
+        <div className="flex flex-col gap-1.5">
+          <label className="font-mono text-xs text-zinc-500">Base URL</label>
+          <input
+            type="text"
+            value={jiraBaseUrl}
+            onChange={(e) => setJiraBaseUrl(e.target.value)}
+            placeholder="https://yourcompany.atlassian.net"
+            spellCheck={false}
+            className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="font-mono text-xs text-zinc-500">Atlassian e-mail</label>
+          <input
+            type="email"
+            value={jiraEmail}
+            onChange={(e) => setJiraEmail(e.target.value)}
+            placeholder="you@company.com"
+            spellCheck={false}
+            className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="font-mono text-xs text-zinc-500">
+            API token{' '}
+            <a
+              href="https://id.atlassian.com/manage-profile/security/api-tokens"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-zinc-200 underline transition-colors"
+            >
+              Generate ↗
+            </a>
+          </label>
+          <input
+            type="password"
+            value={jiraApiToken}
+            onChange={(e) => setJiraApiToken(e.target.value)}
+            placeholder="••••••••••••••••••••"
+            className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <button className="btn-primary" onClick={handleSaveJira} disabled={!jiraIsDirty}>
+              {jiraSaved ? 'Saved ✓' : 'Save'}
+            </button>
+            {jiraIsDirty && (
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  setJiraBaseUrl(config.jira?.baseUrl ?? '');
+                  setJiraEmail(config.jira?.email ?? '');
+                  setJiraApiToken(config.jira?.apiToken ?? '');
+                  setJiraError(null);
+                }}
               >
-                {KNOWN_EDITORS.map((e) => (
-                  <option key={e.command} value={e.command}>
-                    {e.label} — {e.command}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+                Discard
+              </button>
+            )}
+          </div>
+          {jiraError && <p className="font-mono text-xs text-red-400">{jiraError}</p>}
+        </div>
+      </SettingsCollapsibleSection>
 
-          {/* Custom command input */}
-          {selection === 'custom' && (
-            <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-xs text-zinc-500">
-                Command{' '}
-                <span className="text-zinc-600">(e.g. <code className="text-zinc-400">cursor</code> or <code className="text-zinc-400">code --new-window</code>)</span>
-              </label>
+      {/* ── Tempo ───────────────────────────────────────────── */}
+      <SettingsCollapsibleSection
+        title="Tempo"
+        description="Connect to Tempo to log and view your time entries from the Hours tab."
+        dirty={tempoIsDirty}
+        defaultOpen={!!config.tempo?.apiToken}
+      >
+        <div className="flex flex-col gap-1.5">
+          <label className="font-mono text-xs text-zinc-500">
+            Tempo API token{' '}
+            <a
+              href={`${config.jira?.baseUrl ?? 'https://your-domain.atlassian.net'}/plugins/servlet/ac/io.tempo.jira/tempo-app#!/configuration/api-integration`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-zinc-200 underline transition-colors"
+            >
+              Generate ↗
+            </a>
+          </label>
+          <input
+            type="password"
+            value={tempoApiToken}
+            onChange={(e) => setTempoApiToken(e.target.value)}
+            placeholder="••••••••••••••••••••"
+            className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="font-mono text-xs text-zinc-500">Default description</label>
+          <input
+            type="text"
+            value={tempoDefaultDescription}
+            onChange={(e) => setTempoDefaultDescription(e.target.value)}
+            placeholder="e.g. Development work"
+            className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+          />
+          <p className="font-mono text-[10px] text-zinc-600">Used as worklog description when none is entered. Tempo requires a description.</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <button className="btn-primary" onClick={handleSaveTempo} disabled={!tempoIsDirty}>
+              {tempoSaved ? 'Saved ✓' : 'Save'}
+            </button>
+            {tempoIsDirty && (
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  setTempoApiToken(config.tempo?.apiToken ?? '');
+                  setTempoDefaultDescription(config.tempo?.defaultDescription ?? '');
+                  setTempoError(null);
+                }}
+              >
+                Discard
+              </button>
+            )}
+          </div>
+          {tempoError && <p className="font-mono text-xs text-red-400">{tempoError}</p>}
+        </div>
+      </SettingsCollapsibleSection>
+
+      {/* ── Saved Jira assignees ─────────────────────────────── */}
+      {config.jira?.baseUrl && (
+        <SettingsCollapsibleSection
+          title="Saved Jira assignees"
+          description="Always show these team members in the assign menu, even when they have no active tickets in the current sprint."
+          hint={savedAssignees.length > 0 ? `${savedAssignees.length} saved` : undefined}
+        >
+          <div className="flex flex-col gap-1.5">
+            <label className="font-mono text-xs text-zinc-500">
+              Add by Jira account ID
+              <span className="ml-1.5 text-zinc-600">(from the user's Atlassian profile URL)</span>
+            </label>
+            <div className="flex items-center gap-2">
               <input
                 type="text"
-                value={customValue}
-                onChange={(e) => setCustomValue(e.target.value)}
-                placeholder="code"
+                value={assigneeIdInput}
+                onChange={(e) => { setAssigneeIdInput(e.target.value); setAssigneeLookupError(null); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddAssignee(); }}
+                placeholder="712020:abc123..."
                 spellCheck={false}
-                className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
+                className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 flex-1 max-w-xs"
               />
-            </div>
-          )}
-
-          {/* Preview */}
-          <p className="font-mono text-xs text-zinc-600">
-            Will run:{' '}
-            <code className="text-zinc-400">
-              {currentCommand || 'code'} &lt;project-path&gt;
-            </code>
-          </p>
-
-          {/* Actions */}
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
               <button
-                className="btn-primary"
-                onClick={handleSave}
-                disabled={!isDirty}
+                className="btn-secondary text-xs"
+                onClick={handleAddAssignee}
+                disabled={!assigneeIdInput.trim() || assigneeLookupLoading}
               >
-                {saved ? 'Saved!' : 'Save'}
+                {assigneeLookupLoading ? 'Looking up…' : '+ Add'}
               </button>
-              {isDirty && (
-                <button className="btn-secondary" onClick={handleDiscard}>
-                  Discard
-                </button>
-              )}
             </div>
-            {saveError && (
-              <p className="font-mono text-xs text-red-400">{saveError}</p>
+            {assigneeLookupError && (
+              <p className="font-mono text-xs text-red-400">{assigneeLookupError}</p>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Jira credentials section */}
-      <div className="border border-zinc-800 rounded-lg overflow-hidden">
-        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
-          <p className="font-mono text-xs font-medium text-zinc-300">Jira</p>
-          <p className="font-mono text-xs text-zinc-500 mt-0.5">
-            Used to fetch active sprint issues per project. Your API token is stored in{' '}
-            <span className="text-zinc-300">launch.config.gizzyb</span> — keep that file private.
-          </p>
-        </div>
-
-        <div className="px-4 py-4 bg-zinc-900 flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-xs text-zinc-500">Base URL</label>
-            <input
-              type="text"
-              value={jiraBaseUrl}
-              onChange={(e) => setJiraBaseUrl(e.target.value)}
-              placeholder="https://yourcompany.atlassian.net"
-              spellCheck={false}
-              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-xs text-zinc-500">Atlassian e-mail</label>
-            <input
-              type="email"
-              value={jiraEmail}
-              onChange={(e) => setJiraEmail(e.target.value)}
-              placeholder="you@company.com"
-              spellCheck={false}
-              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-xs text-zinc-500">
-              API token{' '}
-              <a
-                href="https://id.atlassian.com/manage-profile/security/api-tokens"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-400 hover:text-zinc-200 underline transition-colors"
-              >
-                Generate ↗
-              </a>
-            </label>
-            <input
-              type="password"
-              value={jiraApiToken}
-              onChange={(e) => setJiraApiToken(e.target.value)}
-              placeholder="••••••••••••••••••••"
-              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <button
-                className="btn-primary"
-                onClick={handleSaveJira}
-                disabled={!jiraIsDirty}
-              >
-                {jiraSaved ? 'Saved ✓' : 'Save'}
-              </button>
-              {jiraIsDirty && (
-                <button
-                  className="btn-secondary"
-                  onClick={() => {
-                    setJiraBaseUrl(config.jira?.baseUrl ?? '');
-                    setJiraEmail(config.jira?.email ?? '');
-                    setJiraApiToken(config.jira?.apiToken ?? '');
-                    setJiraError(null);
-                  }}
-                >
-                  Discard
-                </button>
-              )}
-            </div>
-            {jiraError && (
-              <p className="font-mono text-xs text-red-400">{jiraError}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* TEMPO credentials */}
-      <div className="border border-zinc-800 rounded-lg overflow-hidden">
-        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
-          <p className="font-mono text-xs font-medium text-zinc-300">Tempo</p>
-          <p className="font-mono text-xs text-zinc-500 mt-0.5">
-            Used to log and retrieve hours via TEMPO. Generate an API token in TEMPO → Settings → API integration.
-            The token is stored in <span className="text-zinc-300">launch.config.gizzyb</span> — keep that file private.
-          </p>
-        </div>
-        <div className="px-4 py-4 bg-zinc-900 flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-xs text-zinc-500">
-              TEMPO API token{' '}
-              <a
-                href={`${config.jira?.baseUrl ?? 'https://your-domain.atlassian.net'}/plugins/servlet/ac/io.tempo.jira/tempo-app#!/configuration/api-integration`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-400 hover:text-zinc-200 underline transition-colors"
-              >
-                Generate ↗
-              </a>
-            </label>
-            <input
-              type="password"
-              value={tempoApiToken}
-              onChange={(e) => setTempoApiToken(e.target.value)}
-              placeholder="••••••••••••••••••••"
-              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-xs text-zinc-500">Default description</label>
-            <input
-              type="text"
-              value={tempoDefaultDescription}
-              onChange={(e) => setTempoDefaultDescription(e.target.value)}
-              placeholder="e.g. Development work"
-              className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 max-w-xs"
-            />
-            <p className="font-mono text-[10px] text-zinc-600">Used as worklog description when none is entered. Tempo requires a description.</p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <button className="btn-primary" onClick={handleSaveTempo} disabled={!tempoIsDirty}>
-                {tempoSaved ? 'Saved ✓' : 'Save'}
-              </button>
-              {tempoIsDirty && (
-                <button
-                  className="btn-secondary"
-                  onClick={() => {
-                    setTempoApiToken(config.tempo?.apiToken ?? '');
-                    setTempoDefaultDescription(config.tempo?.defaultDescription ?? '');
-                    setTempoError(null);
-                  }}
-                >
-                  Discard
-                </button>
-              )}
-            </div>
-            {tempoError && <p className="font-mono text-xs text-red-400">{tempoError}</p>}
-          </div>
-        </div>
-      </div>
-
-      {/* Saved Jira assignees */}
-      {config.jira?.baseUrl && (
-        <div className="border border-zinc-800 rounded-lg overflow-hidden">
-          <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
-            <p className="font-mono text-xs font-medium text-zinc-300">Saved Jira assignees</p>
-            <p className="font-mono text-xs text-zinc-500 mt-0.5">
-              These people always appear in the bulk-assign dropdown, even if they have no tickets in the current sprint.
-            </p>
-          </div>
-          <div className="px-4 py-4 bg-zinc-900 flex flex-col gap-3">
-            {/* Add by account ID */}
-            <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-xs text-zinc-500">
-                Add by Jira account ID
-                <span className="ml-1.5 text-zinc-600">(from the user's Atlassian profile URL)</span>
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={assigneeIdInput}
-                  onChange={(e) => { setAssigneeIdInput(e.target.value); setAssigneeLookupError(null); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleAddAssignee(); }}
-                  placeholder="712020:abc123..."
-                  spellCheck={false}
-                  className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 flex-1 max-w-xs"
-                />
-                <button
-                  className="btn-secondary text-xs"
-                  onClick={handleAddAssignee}
-                  disabled={!assigneeIdInput.trim() || assigneeLookupLoading}
-                >
-                  {assigneeLookupLoading ? 'Looking up…' : '+ Add'}
-                </button>
-              </div>
-              {assigneeLookupError && (
-                <p className="font-mono text-xs text-red-400">{assigneeLookupError}</p>
-              )}
-            </div>
-
-            {/* Saved list */}
-            {savedAssignees.length > 0 ? (
-              <div className="flex flex-col gap-1">
-                {savedAssignees.map((u) => (
-                  <div key={u.accountId} className="flex items-center justify-between gap-2 bg-zinc-800 border border-zinc-700 rounded px-3 py-2">
-                    <div className="flex flex-col min-w-0">
-                      <span className="font-mono text-xs text-zinc-100 truncate">{u.displayName}</span>
-                      <span className="font-mono text-[10px] text-zinc-500 truncate">{u.accountId}</span>
-                    </div>
-                    <button
-                      onClick={() => handleRemoveAssignee(u.accountId)}
-                      className="font-mono text-[10px] text-zinc-500 hover:text-red-400 transition-colors shrink-0"
-                      title="Remove"
-                    >
-                      ✕
-                    </button>
+          {savedAssignees.length > 0 ? (
+            <div className="flex flex-col gap-1">
+              {savedAssignees.map((u) => (
+                <div key={u.accountId} className="flex items-center justify-between gap-2 bg-zinc-800 border border-zinc-700 rounded px-3 py-2">
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-mono text-xs text-zinc-100 truncate">{u.displayName}</span>
+                    <span className="font-mono text-[10px] text-zinc-500 truncate">{u.accountId}</span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="font-mono text-xs text-zinc-600 italic">No saved assignees yet.</p>
-            )}
-          </div>
-        </div>
+                  <button
+                    onClick={() => handleRemoveAssignee(u.accountId)}
+                    className="font-mono text-[10px] text-zinc-500 hover:text-red-400 transition-colors shrink-0"
+                    title="Remove"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="font-mono text-xs text-zinc-600 italic">No saved assignees yet.</p>
+          )}
+        </SettingsCollapsibleSection>
       )}
 
-      {/* ── Export / Import ──────────────────────────────── */}
-      <div className="border border-zinc-800 rounded-lg overflow-hidden">
-        <div className="px-4 py-3 bg-zinc-800 border-b border-zinc-700">
-          <p className="font-mono text-xs font-medium text-zinc-300">Config file (.gizzyb)</p>
-          <p className="font-mono text-xs text-zinc-500 mt-0.5">
-            Export your full config to share with others, or import a <code className="text-zinc-400">.gizzyb</code> file
-            to load someone else's setup. Importing <strong className="text-zinc-300">replaces</strong> your current config.
-          </p>
+      {/* ── Config file (.gizzyb) ────────────────────────────── */}
+      <SettingsCollapsibleSection
+        title="Config file (.gizzyb)"
+        description="Share your settings with teammates by exporting, or load someone else's setup by importing. Importing will overwrite your current configuration."
+      >
+        <div className="flex items-center gap-3 flex-wrap">
+          <button className="btn-secondary" onClick={handleExport}>
+            Export config
+          </button>
+          <button
+            className="btn-secondary"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+          >
+            {importing ? 'Importing…' : 'Import config'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".gizzyb,application/json"
+            className="hidden"
+            onChange={handleImport}
+          />
         </div>
-        <div className="px-4 py-4 bg-zinc-900 flex flex-col gap-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <button className="btn-secondary" onClick={handleExport}>
-              Export config
-            </button>
-            <button
-              className="btn-secondary"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={importing}
-            >
-              {importing ? 'Importing…' : 'Import config'}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".gizzyb,application/json"
-              className="hidden"
-              onChange={handleImport}
-            />
-          </div>
-          {importError && (
-            <p className="font-mono text-xs text-red-400">{importError}</p>
-          )}
-          {importSuccess && (
-            <p className="font-mono text-xs text-emerald-400">Config imported — reloading…</p>
-          )}
-        </div>
-      </div>
-
+        {importError && (
+          <p className="font-mono text-xs text-red-400">{importError}</p>
+        )}
+        {importSuccess && (
+          <p className="font-mono text-xs text-emerald-400">Config imported — reloading…</p>
+        )}
+      </SettingsCollapsibleSection>
     </div>
   );
 }

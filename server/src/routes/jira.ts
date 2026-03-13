@@ -379,7 +379,9 @@ router.get('/search', async (req: Request, res: Response) => {
 
     // Escape characters that are special in JQL string values
     const safeQ = q.trim().replace(/[~"\\]/g, (c) => `\\${c}`).slice(0, 100);
-    const jql = `text ~ "${safeQ}" ORDER BY updated DESC`;
+    // Include issueKey = so that exact key lookups (e.g. SLODEV-1337) always work,
+    // in addition to full-text search across summary/description/comments.
+    const jql = `(text ~ "${safeQ}" OR issueKey = "${safeQ}") ORDER BY updated DESC`;
 
     const response = await fetch(`${ctx.baseUrl}/rest/api/3/search/jql`, {
       method: 'POST',

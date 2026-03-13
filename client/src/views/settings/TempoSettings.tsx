@@ -3,6 +3,8 @@ import { useConfig } from '../../context/ConfigContext';
 import { useView } from '../../context/ViewContext';
 import { TempoFavorite } from '../../types';
 import { SettingsHeader } from '../../components/SettingsHeader';
+import { SettingsCollapsibleRow } from '../../components/SettingsCollapsibleRow';
+import { SettingsCollapsibleSection } from '../../components/SettingsCollapsibleSection';
 
 function formatMins(minutes: number): string {
   const h = Math.floor(minutes / 60);
@@ -85,139 +87,148 @@ export function TempoSettings() {
     }
   };
 
+  const toggleFavorite = (fav: TempoFavorite) => {
+    if (editingId === fav.id) {
+      setEditingId(null);
+    } else {
+      startEdit(fav);
+    }
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto p-6">
-      <div className="max-w-xl flex flex-col gap-6">
+    <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+      <SettingsHeader
+        title="Quick Log Favorites"
+        description="Your saved time entry shortcuts — click any one in the Hours view to log time in one go."
+      />
 
-        {/* Header */}
-        <SettingsHeader
-          title="Quick Log Favorites"
-          description="One-click time entry favorites for the Hours view."
-        />
+      {/* ── Favorites list ──────────────────────────────────── */}
+      {favorites.length === 0 && (
+        <p className="font-mono text-xs text-zinc-600 px-1">No favorites yet — add one below.</p>
+      )}
 
-        {/* Current favorites */}
-        {favorites.length === 0 ? (
-          <p className="font-mono text-xs text-zinc-600">No favorites yet — add one below.</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {favorites.map((fav) =>
-              editingId === fav.id ? (
-                // ── Inline edit form ────────────────────────────────────────
-                <div key={fav.id} className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 flex flex-col gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-mono text-xs text-zinc-500">Label</label>
+      {favorites.length > 0 && (
+        <div className="flex flex-col gap-px border border-zinc-800 rounded-lg overflow-hidden">
+          {favorites.map((fav) => (
+            <SettingsCollapsibleRow
+              key={fav.id}
+              title={fav.label}
+              summary={fav.ticketKey}
+              badge={
+                <span className="font-mono text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded shrink-0">
+                  {formatMins(fav.minutes)}
+                </span>
+              }
+              isOpen={editingId === fav.id}
+              onToggle={() => toggleFavorite(fav)}
+              headerActions={
+                <button onClick={() => handleDelete(fav.id)} className="btn-danger text-xs">
+                  Delete
+                </button>
+              }
+            >
+              {/* ── Inline edit form ─────────────────────────── */}
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-mono text-xs text-zinc-500">Label</label>
+                  <input
+                    type="text"
+                    value={editLabel}
+                    onChange={(e) => setEditLabel(e.target.value)}
+                    className="input"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <label className="font-mono text-xs text-zinc-500">Ticket key</label>
                     <input
                       type="text"
-                      value={editLabel}
-                      onChange={(e) => setEditLabel(e.target.value)}
-                      className="input"
-                      autoFocus
+                      value={editTicketKey}
+                      onChange={(e) => setEditTicketKey(e.target.value)}
+                      className="input font-mono"
+                      placeholder="PROJ-42"
                     />
                   </div>
-                  <div className="flex gap-3">
-                    <div className="flex flex-col gap-1.5 flex-1">
-                      <label className="font-mono text-xs text-zinc-500">Ticket key</label>
-                      <input
-                        type="text"
-                        value={editTicketKey}
-                        onChange={(e) => setEditTicketKey(e.target.value)}
-                        className="input font-mono"
-                        placeholder="PROJ-42"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5 w-28">
-                      <label className="font-mono text-xs text-zinc-500">Minutes</label>
-                      <input
-                        type="number"
-                        value={editMinutes}
-                        min={1}
-                        onChange={(e) => setEditMinutes(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="input"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <button onClick={() => setEditingId(null)} className="btn-secondary text-xs">
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveEdit}
-                      disabled={saving || !editLabel.trim() || !editTicketKey.trim()}
-                      className="btn-primary text-xs disabled:opacity-40"
-                    >
-                      {saving ? '…' : 'Save'}
-                    </button>
+                  <div className="flex flex-col gap-1.5 w-28">
+                    <label className="font-mono text-xs text-zinc-500">Minutes</label>
+                    <input
+                      type="number"
+                      value={editMinutes}
+                      min={1}
+                      onChange={(e) => setEditMinutes(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="input"
+                    />
                   </div>
                 </div>
-              ) : (
-                // ── Row ────────────────────────────────────────────────────
-                <div key={fav.id} className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3">
-                  <span className="font-mono text-sm text-zinc-100 flex-1 truncate">{fav.label}</span>
-                  <span className="font-mono text-xs text-zinc-500 shrink-0">{fav.ticketKey}</span>
-                  <span className="font-mono text-xs text-zinc-500 shrink-0 w-10 text-right">{formatMins(fav.minutes)}</span>
-                  <button onClick={() => startEdit(fav)} className="btn-secondary text-xs shrink-0">
-                    Edit
+                <div className="flex gap-2 justify-end">
+                  <button onClick={() => setEditingId(null)} className="btn-secondary text-xs">
+                    Cancel
                   </button>
-                  <button onClick={() => handleDelete(fav.id)} className="btn-danger text-xs shrink-0">
-                    Delete
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={saving || !editLabel.trim() || !editTicketKey.trim()}
+                    className="btn-primary text-xs disabled:opacity-40"
+                  >
+                    {saving ? '…' : 'Save'}
                   </button>
                 </div>
-              )
-            )}
-          </div>
-        )}
+              </div>
+            </SettingsCollapsibleRow>
+          ))}
+        </div>
+      )}
 
-        {/* Add form */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex flex-col gap-4">
-          <h2 className="font-mono text-xs font-medium text-zinc-400 uppercase tracking-widest">
-            Add favorite
-          </h2>
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-xs text-zinc-500">Label</label>
+      {/* ── Add favorite ────────────────────────────────────── */}
+      <SettingsCollapsibleSection
+        title="Add favorite"
+        description="Save a combination of ticket, duration, and description as a shortcut for quick logging."
+        defaultOpen={favorites.length === 0}
+      >
+        <div className="flex flex-col gap-1.5">
+          <label className="font-mono text-xs text-zinc-500">Label</label>
+          <input
+            type="text"
+            value={addLabel}
+            onChange={(e) => setAddLabel(e.target.value)}
+            placeholder="Stand-up"
+            className="input"
+          />
+        </div>
+        <div className="flex gap-3">
+          <div className="flex flex-col gap-1.5 flex-1">
+            <label className="font-mono text-xs text-zinc-500">Ticket key</label>
             <input
               type="text"
-              value={addLabel}
-              onChange={(e) => setAddLabel(e.target.value)}
-              placeholder="Stand-up"
+              value={addTicketKey}
+              onChange={(e) => setAddTicketKey(e.target.value)}
+              placeholder="PROJ-42"
+              className="input font-mono"
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5 w-28">
+            <label className="font-mono text-xs text-zinc-500">Minutes</label>
+            <input
+              type="number"
+              value={addMinutes}
+              min={1}
+              onChange={(e) => setAddMinutes(Math.max(1, parseInt(e.target.value) || 1))}
               className="input"
             />
           </div>
-          <div className="flex gap-3">
-            <div className="flex flex-col gap-1.5 flex-1">
-              <label className="font-mono text-xs text-zinc-500">Ticket key</label>
-              <input
-                type="text"
-                value={addTicketKey}
-                onChange={(e) => setAddTicketKey(e.target.value)}
-                placeholder="PROJ-42"
-                className="input font-mono"
-                onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5 w-28">
-              <label className="font-mono text-xs text-zinc-500">Minutes</label>
-              <input
-                type="number"
-                value={addMinutes}
-                min={1}
-                onChange={(e) => setAddMinutes(Math.max(1, parseInt(e.target.value) || 1))}
-                className="input"
-              />
-            </div>
-          </div>
-          {addError && <p className="font-mono text-xs text-red-400">{addError}</p>}
-          <div className="flex justify-end">
-            <button
-              onClick={handleAdd}
-              disabled={adding}
-              className="btn-primary text-xs disabled:opacity-40"
-            >
-              {adding ? '…' : '+ Add'}
-            </button>
-          </div>
         </div>
-
-      </div>
+        {addError && <p className="font-mono text-xs text-red-400">{addError}</p>}
+        <div className="flex justify-end">
+          <button
+            onClick={handleAdd}
+            disabled={adding}
+            className="btn-primary text-xs disabled:opacity-40"
+          >
+            {adding ? '…' : '+ Add'}
+          </button>
+        </div>
+      </SettingsCollapsibleSection>
     </div>
   );
 }

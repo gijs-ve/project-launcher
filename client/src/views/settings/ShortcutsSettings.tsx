@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useConfig } from '../../context/ConfigContext';
 import { useShortcuts, mouseButtonToLabel, displayBinding } from '../../context/ShortcutsContext';
 import { SettingsHeader } from '../../components/SettingsHeader';
+import { SettingsCollapsibleSection } from '../../components/SettingsCollapsibleSection';
 
 // Keys that should be ignored for binding (modifier-only presses, etc.)
 const IGNORED_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab']);
@@ -87,10 +88,10 @@ export function ShortcutsSettings() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+    <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
       <SettingsHeader
         title="Shortcuts"
-        description="Click a key badge to re-bind it, then press any key or mouse button. Press Esc to cancel."
+        description="Click any key badge to change its binding, then press the new key. Press Esc to cancel."
         actions={
           <button className="btn-secondary" onClick={resetShortcuts}>
             Reset to defaults
@@ -99,9 +100,12 @@ export function ShortcutsSettings() {
       />
 
       {/* ── Navigation ───────────────────────────────────────── */}
-      <div>
-        <h3 className="font-mono text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Navigation</h3>
-        <div className="border border-zinc-800 rounded-lg overflow-hidden">
+      <SettingsCollapsibleSection
+        title="Navigation"
+        description="Jump between the main tabs without touching the mouse."
+        defaultOpen
+      >
+        <div className="border border-zinc-800 rounded-lg overflow-hidden -mx-0">
           <div className="grid grid-cols-[1fr_10rem_2.5rem] gap-4 px-4 py-2 bg-zinc-800 border-b border-zinc-700">
             <span className="font-mono text-xs text-zinc-500">Action</span>
             <span className="font-mono text-xs text-zinc-500">Binding</span>
@@ -133,16 +137,18 @@ export function ShortcutsSettings() {
             );
           })}
         </div>
-      </div>
+      </SettingsCollapsibleSection>
 
       {/* ── Project shortcuts ────────────────────────────────── */}
-      <div>
-        <h3 className="font-mono text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Open project</h3>
+      <SettingsCollapsibleSection
+        title="Open project"
+        description="Assign a key to open any project directly from the Projects view."
+        defaultOpen
+      >
         {projects.length === 0 ? (
-          <p className="font-mono text-zinc-500 text-xs p-4">No projects yet. Add some in Projects settings.</p>
+          <p className="font-mono text-zinc-500 text-xs">No projects yet. Add some in Projects settings.</p>
         ) : (
           <div className="border border-zinc-800 rounded-lg overflow-hidden">
-            {/* Header */}
             <div className="grid grid-cols-[2rem_1fr_8rem_2.5rem] gap-4 px-4 py-2 bg-zinc-800 border-b border-zinc-700">
               <span className="font-mono text-xs text-zinc-500">#</span>
               <span className="font-mono text-xs text-zinc-500">Project</span>
@@ -161,13 +167,8 @@ export function ShortcutsSettings() {
                   className="grid grid-cols-[2rem_1fr_8rem_2.5rem] gap-4 items-center px-4 py-3 bg-zinc-900 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800 last:border-0"
                   style={{ borderLeft: `3px solid ${project.color}` }}
                 >
-                  {/* Index */}
                   <span className="font-mono text-xs text-zinc-500">{idx + 1}</span>
-
-                  {/* Project name */}
                   <span className="font-mono text-sm text-zinc-100 truncate">{project.name}</span>
-
-                  {/* Key binding */}
                   <button
                     onClick={() => setCapturing(isCapturing ? null : action)}
                     className={[
@@ -182,9 +183,7 @@ export function ShortcutsSettings() {
                   >
                     {isCapturing ? '…press a key' : (boundKey ? displayBinding(boundKey) : 'unbound')}
                   </button>
-
-                  {/* Clear button */}
-                  {boundKey && !isCapturing && (
+                  {boundKey && !isCapturing ? (
                     <button
                       onClick={() => clearShortcut(action)}
                       className="font-mono text-xs text-zinc-600 hover:text-red-400 transition-colors text-center"
@@ -192,18 +191,16 @@ export function ShortcutsSettings() {
                     >
                       ✕
                     </button>
-                  )}
-                  {(!boundKey || isCapturing) && <span />}
+                  ) : <span />}
                 </div>
               );
             })}
           </div>
         )}
-      </div>
-
-      <p className="font-mono text-xs text-zinc-600">
-        Shortcuts are active on the Projects view. They do not fire when an input is focused.
-      </p>
+        <p className="font-mono text-xs text-zinc-600">
+          Shortcuts are active on the Projects view. They do not fire when an input is focused.
+        </p>
+      </SettingsCollapsibleSection>
     </div>
   );
 }

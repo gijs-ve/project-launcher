@@ -4,6 +4,7 @@ import { TempoWorklog } from '../types';
 import { WorklogAuthor } from '../components/WorklogAuthor';
 import { TicketKeyChip } from '../components/TicketKeyChip';
 import { QuickLogDropdown } from '../components/QuickLogDropdown';
+import { Tooltip } from '../components/Tooltip';
 
 // ── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -103,6 +104,9 @@ export function HoursView() {
   const [deletingId, setDeletingId]   = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // View mode
+  const [summarized, setSummarized] = useState(false);
+
   // ── Fetch current Jira user once ──────────────────────────────────────────
   useEffect(() => {
     fetch('/api/jira/me')
@@ -158,7 +162,7 @@ export function HoursView() {
     const timer = setTimeout(async () => {
       setSearchLoading(true);
       try {
-        const r = await fetch(`/api/jira/search?q=${encodeURIComponent(ticketQuery.trim())}&maxResults=8`);
+        const r = await fetch(`/api/jira/search?q=${encodeURIComponent(ticketQuery.trim())}&maxResults=15`);
         if (r.ok) {
           const data = await r.json() as { issues?: JiraSearchResult[] };
           setTicketResults(data.issues ?? []);
@@ -252,10 +256,24 @@ export function HoursView() {
   const days = [...dayMap.entries()].sort(([a], [b]) => b.localeCompare(a));
   const weekTotal = worklogs.reduce((s, w) => s + w.timeSpentSeconds, 0);
 
+  // ── Per-day per-author summary ─────────────────────────────────────────────
+  interface AuthorSummary { accountId: string; displayName: string; totalSeconds: number; }
+  const summaryDays: Array<[string, AuthorSummary[]]> = days.map(([dateStr, entries]) => {
+    const authorMap = new Map<string, AuthorSummary>();
+    for (const w of entries) {
+      const key = w.author.accountId;
+      if (!authorMap.has(key)) {
+        authorMap.set(key, { accountId: key, displayName: w.author.displayName ?? '', totalSeconds: 0 });
+      }
+      authorMap.get(key)!.totalSeconds += w.timeSpentSeconds;
+    }
+    return [dateStr, [...authorMap.values()].sort((a, b) => b.totalSeconds - a.totalSeconds)];
+  });
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-3xl mx-auto px-6 py-6 flex flex-col gap-6">
+      <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col gap-6">
 
         {/* ── Tab strip ──────────────────────────────────────────── */}
         {(teams.length > 0 || teamsLoading) && (
@@ -323,6 +341,31 @@ export function HoursView() {
                 Week: {formatDuration(weekTotal)}
               </span>
             )}
+            {/* View-mode toggle */}
+            <div className="flex items-center rounded border border-zinc-700">
+              <Tooltip text="Detailed view" placement="bottom">
+                <button
+                  onClick={() => setSummarized(false)}
+                  className={[
+                    'font-mono text-[11px] px-2.5 py-1.5 transition-colors rounded-l',
+                    !summarized ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800',
+                  ].join(' ')}
+                >
+                  ≡
+                </button>
+              </Tooltip>
+              <Tooltip text="Summary view" placement="bottom">
+                <button
+                  onClick={() => setSummarized(true)}
+                  className={[
+                    'font-mono text-[11px] px-2.5 py-1.5 transition-colors rounded-r',
+                    summarized ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800',
+                  ].join(' ')}
+                >
+                  ⊞
+                </button>
+              </Tooltip>
+            </div>
             <button
               onClick={() => {
                 setShowAddForm((v) => !v);
@@ -467,8 +510,43 @@ export function HoursView() {
           <p className="font-mono text-xs text-zinc-600">No hours logged this week.</p>
         )}
 
+        {/* ── Summary view ────────────────────────────────────────── */}
+        {!loading && !error && summarized && summaryDays.map(([dateStr, authors]) => {
+          const dayTotal = authors.reduce((s, a) => s + a.totalSeconds, 0);
+          return (
+            <div key={dateStr} className="flex flex-col gap-2">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+                <span className="font-mono text-xs font-semibold text-zinc-300">
+                  {formatDayHeader(dateStr)}
+                </span>
+                <span className="font-mono text-xs text-zinc-500">
+                  {formatDuration(dayTotal)}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {authors.map((a) => (
+                  <div
+                    key={a.accountId}
+                    className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2"
+                  >
+                    <span className="font-mono text-sm font-semibold text-zinc-100 w-16 shrink-0">
+                      {formatDuration(a.totalSeconds)}
+                    </span>
+                    <span className="shrink-0">
+                      <WorklogAuthor
+                        accountId={a.accountId}
+                        tempoDisplayName={a.displayName}
+                      />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
         {/* ── Day-by-day breakdown ─────────────────────────────────── */}
-        {!loading && !error && days.map(([dateStr, entries]) => {
+        {!loading && !error && !summarized && days.map(([dateStr, entries]) => {
           const dayTotal = entries.reduce((s, w) => s + w.timeSpentSeconds, 0);
           const sorted   = [...entries].sort((a, b) => a.tempoWorklogId - b.tempoWorklogId);
 
@@ -506,7 +584,7 @@ export function HoursView() {
 
                     {/* Description */}
                     {w.description ? (
-                      <span className="font-mono text-xs text-zinc-600 truncate flex-1 italic">
+                      <span className="font-mono text-xs text-zinc-600 w-48 truncate  italic">
                         {w.description}
                       </span>
                     ) : (
@@ -514,7 +592,7 @@ export function HoursView() {
                     )}
 
                     {/* Author */}
-                    <span className="shrink-0 w-28 overflow-visible">
+                    <span className="shrink-0 w-48 overflow-visible ml-auto">
                       <WorklogAuthor
                         accountId={w.author.accountId}
                         tempoDisplayName={w.author.displayName}
@@ -526,7 +604,7 @@ export function HoursView() {
                       <button
                         onClick={() => handleDelete(w.tempoWorklogId)}
                         disabled={deletingId === w.tempoWorklogId}
-                        className="btn-danger px-2 py-0.5 text-xs shrink-0 ml-auto"
+                        className="btn-danger px-2 py-0.5 text-xs shrink-0"
                         title="Delete worklog"
                       >
                         {deletingId === w.tempoWorklogId ? '…' : '×'}

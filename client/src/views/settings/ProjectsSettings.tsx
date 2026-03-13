@@ -3,6 +3,7 @@ import { useConfig } from '../../context/ConfigContext';
 import { Project } from '../../types';
 import { ProjectFields, ProjectDraft, projectToDraft, isDraftDirty, DEFAULT_COLOR } from './ProjectFields';
 import { SettingsHeader } from '../../components/SettingsHeader';
+import { SettingsCollapsibleRow } from '../../components/SettingsCollapsibleRow';
 
 function toId(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -119,7 +120,7 @@ export function ProjectsSettings() {
     <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
       <SettingsHeader
         title="Projects"
-        description="Add, edit and remove dev projects."
+        description="Manage the projects that appear in your Projects view."
         actions={
           <>
             {hasDirty && (
@@ -160,7 +161,7 @@ export function ProjectsSettings() {
         </div>
       )}
 
-      <div className="flex flex-col gap-px border border-zinc-800 rounded-lg">
+      <div className="flex flex-col gap-px border border-zinc-800 rounded-lg overflow-hidden">
         {config.projects.length === 0 && (
           <p className="font-mono text-zinc-500 text-xs p-4">No projects yet.</p>
         )}
@@ -171,48 +172,43 @@ export function ProjectsSettings() {
           const draftValid = draft.name.trim() && draft.cwd.trim() && draft.command.trim();
 
           return (
-            <div key={project.id} className="first:rounded-t-lg last:rounded-b-lg overflow-hidden">
-              <div
-                className="flex items-center gap-4 px-4 py-3 bg-zinc-900 hover:bg-zinc-800 transition-colors cursor-pointer select-none"
-                style={{ borderLeft: `3px solid ${project.color}` }}
-                onClick={() => toggleExpand(project)}
-              >
-                <span className="font-mono text-xs text-zinc-500 w-3 shrink-0">
-                  {isOpen ? '▼' : '▶'}
-                </span>
-                <span className="font-mono text-sm text-zinc-100 w-32 truncate">
-                  {dirty
-                    ? <span className="text-amber-300">{draft.name || project.name} ●</span>
-                    : (draft.name || project.name)}
-                </span>
-                <span className="font-mono text-xs text-zinc-500 flex-1 truncate">{project.cwd}</span>
+            <SettingsCollapsibleRow
+              key={project.id}
+              title={draft.name || project.name}
+              summary={project.cwd}
+              badge={
                 <code className="font-mono text-xs text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded truncate max-w-[200px]">
                   {project.command}
                 </code>
-                <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+              }
+              accentColor={project.color}
+              isOpen={isOpen}
+              onToggle={() => toggleExpand(project)}
+              dirty={dirty}
+              headerActions={
+                <>
                   {dirty && (
-                    <button className="btn-secondary text-xs text-zinc-500" onClick={() => discardDraft(project.id)}>
+                    <button
+                      className="btn-secondary text-xs text-zinc-500"
+                      onClick={() => discardDraft(project.id)}
+                    >
                       ✕ Discard
                     </button>
                   )}
                   <button className="btn-danger text-xs" onClick={() => deleteProject(project.id)}>
                     Delete
                   </button>
-                </div>
-              </div>
-
-              {isOpen && (
-                <div className="bg-zinc-900 border-t border-zinc-800 px-4 py-4">
-                  <ProjectFields
-                    draft={draft}
-                    onChange={(patch) => patchDraft(project.id, patch)}
-                  />
-                  {!draftValid && (
-                    <p className="font-mono text-xs text-red-400 mt-2">Name, directory and command are required.</p>
-                  )}
-                </div>
+                </>
+              }
+            >
+              <ProjectFields
+                draft={draft}
+                onChange={(patch) => patchDraft(project.id, patch)}
+              />
+              {!draftValid && (
+                <p className="font-mono text-xs text-red-400 mt-2">Name, directory and command are required.</p>
               )}
-            </div>
+            </SettingsCollapsibleRow>
           );
         })}
       </div>
