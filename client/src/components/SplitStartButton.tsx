@@ -64,7 +64,7 @@ export function SplitStartButton({
           ].join(' ')}
         >
           <p className="px-3 py-1.5 text-[10px] font-mono text-zinc-500 uppercase tracking-wider border-b border-zinc-700">
-            Launch with options
+            Start with options
           </p>
           {LAUNCH_PRESETS.map((preset) => (
             <button

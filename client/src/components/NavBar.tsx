@@ -35,7 +35,7 @@ export function NavBar() {
           onClick={() => setActiveView('projects')}
           className="text-base font-mono font-medium text-zinc-100 tracking-tight hover:text-zinc-300 transition-colors"
         >
-          🚀 Launch
+          🚀 Proud Lazy
         </button>
 
         {/* Breadcrumb: project detail */}

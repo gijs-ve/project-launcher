@@ -69,6 +69,13 @@ router.post('/:id/open-editor', (req: Request, res: Response) => {
   res.json({ ok: true });
 });
 
+// GET /api/projects/:id/logs?lines=N — recent stdout/stderr output
+router.get('/:id/logs', (req: Request, res: Response) => {
+  const id = String(req.params.id);
+  const lines = req.query.lines ? Math.min(parseInt(String(req.query.lines), 10) || 100, 500) : 100;
+  res.json({ projectId: id, lines: processManager.getLogs(id, lines) });
+});
+
 function findProject(id: string) {
   const config = readConfig();
   return config.projects.find((p) => p.id === id) ?? null;

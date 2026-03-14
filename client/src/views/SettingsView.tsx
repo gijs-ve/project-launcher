@@ -100,7 +100,7 @@ export function SettingsView() {
           />
         ))}
       </div>
-      <p className="font-mono text-[10px] text-zinc-700 mt-8">Launch v{__APP_VERSION__}</p>
+      <p className="font-mono text-[10px] text-zinc-700 mt-8">Proud Lazy v{__APP_VERSION__}</p>
     </div>
   );
 }

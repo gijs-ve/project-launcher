@@ -1,0 +1,284 @@
+{
+  "savedAt": "2026-03-13T17:35:25.851Z",
+  "issues": [
+    {
+      "key": "AS-12",
+      "summary": "Umbraco preview mode voor vacatures",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Major",
+      "type": "Story",
+      "project": "AS"
+    },
+    {
+      "key": "AS-47",
+      "summary": "Thuishotel.nl landen op Mijnantonius.nl/Thuishotel",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Major",
+      "type": "Story",
+      "project": "AS"
+    },
+    {
+      "key": "AS-35",
+      "summary": "Antonius - Scheduled maintenance #4",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Lowest",
+      "type": "Story",
+      "project": "AS"
+    },
+    {
+      "key": "AS-41",
+      "summary": "(FE) Antonius - Scheduled maintenance #4",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Lowest",
+      "type": "Story",
+      "project": "AS"
+    },
+    {
+      "key": "SLODEV-381",
+      "summary": "Leergebied pagina's zijn niet vindbaar in zoekpagina",
+      "status": "In Progress",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-383",
+      "summary": "Mailchimp formulier embedden via content element",
+      "status": "In Progress",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-386",
+      "summary": "Standaard link naar overzichtspagina bij FAQ component",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-394",
+      "summary": "Links naar mediabak werken niet",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-399",
+      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-374",
+      "summary": "WCAG bevindingen ",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-387",
+      "summary": "Extern link icoon is heel groot",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-376",
+      "summary": "Karakteristiek: Popup uitbreiden met accordion functie",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-392",
+      "summary": "De balk bovenin waar de groepen staan klopt nog niet conform het design",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-391",
+      "summary": "Wanneer je in de back-end geen popup inhoud bij 'voorbeelden' invult blijft de 'link hier' staan. ",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-390",
+      "summary": "Feedback Leerlijnen",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-382",
+      "summary": "Nieuws en inspiratie component ook per leergebied tonen",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-380",
+      "summary": "Anchors in RTE toevoegen",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-326",
+      "summary": "Aanpassen 'pillen' op leergebiedpagina's",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Major",
+      "type": "Task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-377",
+      "summary": "Feedback sprint #1",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-378",
+      "summary": "Feedback: Inhoud downloadoverzicht klopt niet",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-384",
+      "summary": "Call to action blok uitbreiden met shared content optie",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLOONT-13",
+      "summary": "Afbeelding voor bedankt formulier niet verplicht maken",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "SLOONT"
+    },
+    {
+      "key": "SLOONT-11",
+      "summary": "Feedback formulieren",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SLOONT"
+    },
+    {
+      "key": "SLOONT-12",
+      "summary": "Toegang tot formulieren goed instellen",
+      "status": "Ready for Refinement",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "SLOONT"
+    },
+    {
+      "key": "SNDEV-19",
+      "summary": "Zoekpagina opzetten",
+      "status": "Ready for Test",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-99",
+      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-17",
+      "summary": "(FE) Accordeon element",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-14",
+      "summary": "(FE) Afbeelding & Video element",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-13",
+      "summary": "(FE) Footer opzetten",
+      "status": "Ready for Test",
+      "assignee": "Sjoerd de Wildt",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    }
+  ],
+  "statsByProject": {
+    "AS": 4,
+    "SLODEV": 17,
+    "SLOONT": 3,
+    "SNDEV": 5
+  },
+  "statsByStatus": {
+    "Ready for Test": 13,
+    "To Do": 11,
+    "In Progress": 4,
+    "Ready for Refinement": 1
+  },
+  "statsByAssignee": {
+    "Unassigned": 23,
+    "Sebastiaan Steenbrink": 2,
+    "Gijsbert van Everdingen": 3,
+    "Sjoerd de Wildt": 1
+  }
+}

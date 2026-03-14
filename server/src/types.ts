@@ -19,6 +19,10 @@ export interface Project {
   jiraBaseUrl?: string;
   jiraProjectKeys?: string[];
   jiraBoardUrl?: string;
+  /** Azure DevOps project name, e.g. "MySolution" */
+  adoProject?: string;
+  /** ADO git repository name or ID */
+  adoRepoId?: string;
 }
 
 export interface Link {
@@ -59,6 +63,15 @@ export interface Config {
   issueKeyCache?: Record<string, string>;
   /** Microsoft Teams Incoming Webhook URL for notifications */
   teamsWebhookUrl?: string;
+  /** Azure DevOps integration */
+  ado?: AdoConfig;
+}
+
+export interface AdoConfig {
+  /** e.g. https://dev.azure.com/yourorg */
+  orgUrl: string;
+  /** Personal Access Token (Code: Read, Pull Request Threads: Read & Write) */
+  personalAccessToken: string;
 }
 
 // WebSocket message types — Server → Client

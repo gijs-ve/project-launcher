@@ -1,7 +1,7 @@
 {
-  "name": "launch-mcp",
+  "name": "proud-lazy-mcp",
   "version": "1.0.0",
-  "description": "MCP server exposing Launch app data (Jira, Tempo, processes) to AI assistants",
+  "description": "MCP server exposing Proud Lazy app data (Jira, Tempo, processes) to AI assistants",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

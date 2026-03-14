@@ -97,6 +97,6 @@ wss.on('connection', (ws: WebSocket) => {
 // Start
 // ---------------------------------------------------------------------------
 server.listen(PORT, () => {
-  console.log(`Launch server running on http://localhost:${PORT}`);
+  console.log(`Proud Lazy server running on http://localhost:${PORT}`);
   console.log(`WebSocket endpoint: ws://localhost:${PORT}/ws`);
 });

@@ -1,7 +1,7 @@
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
-  appId: 'com.gijsbert.launch',
-  productName: 'Launch',
+  appId: 'com.gijsbert.proudlazy',
+  productName: 'Proud Lazy',
 
   directories: {
     output: 'dist-electron',
@@ -13,7 +13,7 @@ module.exports = {
     const fs = require('fs');
     const unpackedDir = path.join(
       context.appOutDir,
-      'Launch.app',
+      'Proud Lazy.app',
       'Contents',
       'Resources',
       'app.asar.unpacked',

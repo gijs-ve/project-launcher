@@ -74,6 +74,13 @@ class ProcessManager {
     this.processes.get(projectId)?.subscribers.delete(ws);
   }
 
+  getLogs(projectId: string, lines = 100): string[] {
+    const entry = this.processes.get(projectId);
+    if (!entry) return [];
+    const limit = Math.min(Math.max(1, lines), 500);
+    return entry.buffer.slice(-limit);
+  }
+
   // ---------------------------------------------------------------------------
   // Process lifecycle
   // ---------------------------------------------------------------------------
@@ -213,15 +220,32 @@ class ProcessManager {
       if (cfg.teamsWebhookUrl) {
         const icons: Record<string, string> = { running: '🟢', stopped: '⚪', errored: '🔴' };
         const colors: Record<string, string> = { running: '00B300', stopped: '808080', errored: 'CC0000' };
+        const accentColor = colors[status] ?? '808080';
         fetch(cfg.teamsWebhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            '@type': 'MessageCard',
-            '@context': 'http://schema.org/extensions',
-            summary: `${projectId} is ${status}`,
-            themeColor: colors[status] ?? '808080',
-            title: `${icons[status] ?? '•'} Launch: ${projectId} is ${status}`,
+            type: 'message',
+            attachments: [
+              {
+                contentType: 'application/vnd.microsoft.card.adaptive',
+                content: {
+                  type: 'AdaptiveCard',
+                  $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+                  version: '1.2',
+                  body: [
+                    {
+                      type: 'TextBlock',
+                      size: 'Medium',
+                      weight: 'Bolder',
+                      color: status === 'errored' ? 'Attention' : status === 'running' ? 'Good' : 'Default',
+                      text: `${icons[status] ?? '•'} Proud Lazy: ${projectId} is ${status}`,
+                    },
+                  ],
+                  msteams: { width: 'Full' },
+                },
+              },
+            ],
           }),
         }).catch((err) => console.error('[Teams] webhook error:', err));
       }
