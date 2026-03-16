@@ -382,25 +382,27 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'jira_add_comment',
-      description: 'Add a comment to a Jira issue. The body supports Markdown: ## headings, **bold**, `inline code`, ``` code blocks, - bullet lists, 1. ordered lists, [label](url) links.',
+      description: 'Add a comment to a Jira issue. Comments are ALWAYS posted as internal (visible to Developers role only) by default. Only set public: true when the user explicitly asks for a public comment. The body supports Markdown: ## headings, **bold**, `inline code`, ``` code blocks, - bullet lists, 1. ordered lists, [label](url) links.',
       inputSchema: {
         type: 'object',
         properties: {
           issueKey: { type: 'string', description: 'Jira issue key, e.g. "PROJ-123".' },
           body: { type: 'string', description: 'Comment body in Markdown. Supports ## headings, **bold**, `code`, ``` fenced code blocks, - bullet lists, 1. ordered lists, [label](url) links.' },
+          public: { type: 'boolean', description: 'ONLY set to true when the user explicitly requests a public comment. Default is false — comments are internal (Developers role only).' },
         },
         required: ['issueKey', 'body'],
       },
     },
     {
       name: 'jira_edit_comment',
-      description: 'Edit an existing comment on a Jira issue. The body supports Markdown: ## headings, **bold**, `inline code`, ``` code blocks, - bullet lists, 1. ordered lists, [label](url) links.',
+      description: 'Edit an existing comment on a Jira issue. Comments are ALWAYS posted as internal (visible to Developers role only) by default. Only set public: true when the user explicitly asks for a public comment. The body supports Markdown: ## headings, **bold**, `inline code`, ``` code blocks, - bullet lists, 1. ordered lists, [label](url) links.',
       inputSchema: {
         type: 'object',
         properties: {
           issueKey: { type: 'string', description: 'Jira issue key, e.g. "PROJ-123".' },
           commentId: { type: 'string', description: 'ID of the comment to edit (visible on the comment object from jira_get_issue).' },
           body: { type: 'string', description: 'New comment body in Markdown. Supports ## headings, **bold**, `code`, ``` fenced code blocks, - bullet lists, 1. ordered lists, [label](url) links.' },
+          public: { type: 'boolean', description: 'ONLY set to true when the user explicitly requests a public comment. Default is false — comments are internal (Developers role only).' },
         },
         required: ['issueKey', 'commentId', 'body'],
       },
@@ -881,21 +883,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // ── Jira — comments ───────────────────────────────────────────────────
 
       case 'jira_add_comment': {
-        const { issueKey, body } = args as { issueKey: string; body: string };
+        const { issueKey, body, public: isPublic = false } = args as { issueKey: string; body: string; public?: boolean };
+        const payload: Record<string, unknown> = { body: textToAdf(body) };
+        if (!isPublic) payload.visibility = { type: 'role', value: 'Developers' };
         const data = await jiraFetch(`/rest/api/3/issue/${encodeURIComponent(issueKey)}/comment`, {
           method: 'POST',
-          body: JSON.stringify({ body: textToAdf(body) }),
+          body: JSON.stringify(payload),
         });
         return ok({ commentId: data.id, created: data.created });
       }
 
       case 'jira_edit_comment': {
-        const { issueKey, commentId, body } = args as { issueKey: string; commentId: string; body: string };
+        const { issueKey, commentId, body, public: isPublic = false } = args as { issueKey: string; commentId: string; body: string; public?: boolean };
+        const editPayload: Record<string, unknown> = { body: textToAdf(body) };
+        if (!isPublic) editPayload.visibility = { type: 'role', value: 'Developers' };
         const data = await jiraFetch(
           `/rest/api/3/issue/${encodeURIComponent(issueKey)}/comment/${encodeURIComponent(commentId)}`,
           {
             method: 'PUT',
-            body: JSON.stringify({ body: textToAdf(body) }),
+            body: JSON.stringify(editPayload),
           },
         );
         return ok({ commentId: data.id, updated: data.updated });
