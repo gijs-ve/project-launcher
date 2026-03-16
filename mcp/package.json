@@ -1,5 +1,5 @@
 {
-  "name": "proud-lazy-mcp",
+  "name": "oracle-mcp",
   "version": "1.0.0",
   "description": "MCP server exposing Proud Lazy app data (Jira, Tempo, processes) to AI assistants",
   "type": "module",

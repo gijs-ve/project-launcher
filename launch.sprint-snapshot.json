@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-03-13T17:35:25.851Z",
+  "savedAt": "2026-03-16T08:44:15.733Z",
   "issues": [
     {
       "key": "AS-12",
@@ -38,21 +38,30 @@
       "project": "AS"
     },
     {
-      "key": "SLODEV-381",
-      "summary": "Leergebied pagina's zijn niet vindbaar in zoekpagina",
+      "key": "SLODEV-399",
+      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
       "status": "In Progress",
-      "assignee": "Sebastiaan Steenbrink",
+      "assignee": "Unassigned",
       "priority": "Minor",
-      "type": "Sub-task",
+      "type": "Task",
       "project": "SLODEV"
     },
     {
       "key": "SLODEV-383",
       "summary": "Mailchimp formulier embedden via content element",
       "status": "In Progress",
-      "assignee": "Unassigned",
+      "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
       "type": "Story",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-381",
+      "summary": "Leergebied pagina's zijn niet vindbaar in zoekpagina",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Sub-task",
       "project": "SLODEV"
     },
     {
@@ -71,15 +80,6 @@
       "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Sub-task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-399",
-      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Task",
       "project": "SLODEV"
     },
     {
@@ -227,18 +227,9 @@
       "project": "SNDEV"
     },
     {
-      "key": "SNDEV-99",
-      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
-      "status": "Ready for Test",
-      "assignee": "Sebastiaan Steenbrink",
-      "priority": "Minor",
-      "type": "Task",
-      "project": "SNDEV"
-    },
-    {
       "key": "SNDEV-17",
       "summary": "(FE) Accordeon element",
-      "status": "In Progress",
+      "status": "In Review",
       "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
       "type": "Story",
@@ -247,10 +238,19 @@
     {
       "key": "SNDEV-14",
       "summary": "(FE) Afbeelding & Video element",
-      "status": "In Progress",
+      "status": "In Review",
       "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
       "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-99",
+      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Task",
       "project": "SNDEV"
     },
     {
@@ -271,14 +271,15 @@
   },
   "statsByStatus": {
     "Ready for Test": 13,
-    "To Do": 11,
-    "In Progress": 4,
-    "Ready for Refinement": 1
+    "To Do": 10,
+    "In Progress": 3,
+    "Ready for Refinement": 1,
+    "In Review": 2
   },
   "statsByAssignee": {
-    "Unassigned": 23,
-    "Sebastiaan Steenbrink": 2,
-    "Gijsbert van Everdingen": 3,
+    "Unassigned": 22,
+    "Gijsbert van Everdingen": 5,
+    "Sebastiaan Steenbrink": 1,
     "Sjoerd de Wildt": 1
   }
 }

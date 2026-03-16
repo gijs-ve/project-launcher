@@ -105,11 +105,140 @@ function tempoToken() {
 }
 
 /** Convert plain text to Atlassian Document Format (ADF) */
+/** Parse inline Markdown spans into ADF inline nodes (bold, inline code, links). */
+function parseInlineAdf(text: string): unknown[] {
+  const nodes: unknown[] = [];
+  // Matches: `code`, {{code}}, **bold**, *bold*, [label](url)
+  const regex = /(`[^`\n]+`|\{\{[^}\n]+\}\}|\*\*([^*\n]+)\*\*|\*([^*\n]+)\*|\[([^\]\n]+)\]\(([^)\n]+)\))/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push({ type: 'text', text: text.slice(lastIndex, match.index) });
+    }
+    const token = match[0];
+    if (token.startsWith('`') && token.endsWith('`')) {
+      nodes.push({ type: 'text', text: token.slice(1, -1), marks: [{ type: 'code' }] });
+    } else if (token.startsWith('{{') && token.endsWith('}}')) {
+      nodes.push({ type: 'text', text: token.slice(2, -2), marks: [{ type: 'code' }] });
+    } else if (token.startsWith('**')) {
+      nodes.push({ type: 'text', text: token.slice(2, -2), marks: [{ type: 'strong' }] });
+    } else if (token.startsWith('*')) {
+      nodes.push({ type: 'text', text: token.slice(1, -1), marks: [{ type: 'strong' }] });
+    } else if (match[4] && match[5]) {
+      nodes.push({ type: 'text', text: match[4], marks: [{ type: 'link', attrs: { href: match[5] } }] });
+    }
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) nodes.push({ type: 'text', text: text.slice(lastIndex) });
+  return nodes.length > 0 ? nodes : [{ type: 'text', text }];
+}
+
+/**
+ * Convert a Markdown string into an Atlassian Document Format (ADF) doc node.
+ * Supports: # headings, - /* bullet lists, 1. ordered lists, **bold**, *bold*,
+ * `inline code`, {{inline code}}, [label](url), paragraphs.
+ */
 function textToAdf(text: string) {
+  const lines = text.split('\n');
+  const content: unknown[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Headings: ## Heading
+    const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      content.push({
+        type: 'heading',
+        attrs: { level: Math.min(headingMatch[1].length, 6) },
+        content: parseInlineAdf(headingMatch[2].trim()),
+      });
+      i++;
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^---+$/.test(line.trim())) {
+      content.push({ type: 'rule' });
+      i++;
+      continue;
+    }
+
+    // Bullet list: - item or * item
+    if (/^[\*\-]\s/.test(line)) {
+      const items: unknown[] = [];
+      while (i < lines.length && /^[\*\-]\s/.test(lines[i])) {
+        items.push({
+          type: 'listItem',
+          content: [{ type: 'paragraph', content: parseInlineAdf(lines[i].replace(/^[\*\-]\s+/, '')) }],
+        });
+        i++;
+      }
+      content.push({ type: 'bulletList', content: items });
+      continue;
+    }
+
+    // Ordered list: 1. item
+    if (/^\d+\.\s/.test(line)) {
+      const items: unknown[] = [];
+      while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
+        items.push({
+          type: 'listItem',
+          content: [{ type: 'paragraph', content: parseInlineAdf(lines[i].replace(/^\d+\.\s+/, '')) }],
+        });
+        i++;
+      }
+      content.push({ type: 'orderedList', content: items });
+      continue;
+    }
+
+    // Fenced code block: ```
+    if (line.trimStart().startsWith('```')) {
+      const lang = line.trimStart().slice(3).trim() || undefined;
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].trimStart().startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      i++; // consume closing ```
+      const codeAttrs: Record<string, string> = {};
+      if (lang) codeAttrs.language = lang;
+      content.push({ type: 'codeBlock', attrs: codeAttrs, content: [{ type: 'text', text: codeLines.join('\n') }] });
+      continue;
+    }
+
+    // Empty line — skip
+    if (line.trim() === '') {
+      i++;
+      continue;
+    }
+
+    // Regular paragraph — collect consecutive non-special lines
+    const paragraphLines: string[] = [];
+    while (
+      i < lines.length &&
+      lines[i].trim() !== '' &&
+      !/^#{1,6}\s/.test(lines[i]) &&
+      !/^[\*\-]\s/.test(lines[i]) &&
+      !/^\d+\.\s/.test(lines[i]) &&
+      !/^---+$/.test(lines[i].trim()) &&
+      !lines[i].trimStart().startsWith('```')
+    ) {
+      paragraphLines.push(lines[i]);
+      i++;
+    }
+    if (paragraphLines.length > 0) {
+      content.push({ type: 'paragraph', content: parseInlineAdf(paragraphLines.join(' ')) });
+    }
+  }
+
   return {
     type: 'doc',
     version: 1,
-    content: [{ type: 'paragraph', content: [{ type: 'text', text }] }],
+    content: content.length > 0 ? content : [{ type: 'paragraph', content: [{ type: 'text', text: '' }] }],
   };
 }
 
@@ -138,7 +267,7 @@ async function jiraFetch(path: string, init?: RequestInit) {
 // ---------------------------------------------------------------------------
 
 const server = new Server(
-  { name: 'launch-mcp', version: '1.0.0' },
+  { name: 'oracle', version: '1.0.0' },
   { capabilities: { tools: {} } },
 );
 
@@ -253,25 +382,25 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'jira_add_comment',
-      description: 'Add a comment to a Jira issue.',
+      description: 'Add a comment to a Jira issue. The body supports Markdown: ## headings, **bold**, `inline code`, ``` code blocks, - bullet lists, 1. ordered lists, [label](url) links.',
       inputSchema: {
         type: 'object',
         properties: {
           issueKey: { type: 'string', description: 'Jira issue key, e.g. "PROJ-123".' },
-          body: { type: 'string', description: 'Plain-text comment body.' },
+          body: { type: 'string', description: 'Comment body in Markdown. Supports ## headings, **bold**, `code`, ``` fenced code blocks, - bullet lists, 1. ordered lists, [label](url) links.' },
         },
         required: ['issueKey', 'body'],
       },
     },
     {
       name: 'jira_edit_comment',
-      description: 'Edit an existing comment on a Jira issue.',
+      description: 'Edit an existing comment on a Jira issue. The body supports Markdown: ## headings, **bold**, `inline code`, ``` code blocks, - bullet lists, 1. ordered lists, [label](url) links.',
       inputSchema: {
         type: 'object',
         properties: {
           issueKey: { type: 'string', description: 'Jira issue key, e.g. "PROJ-123".' },
           commentId: { type: 'string', description: 'ID of the comment to edit (visible on the comment object from jira_get_issue).' },
-          body: { type: 'string', description: 'New plain-text content for the comment.' },
+          body: { type: 'string', description: 'New comment body in Markdown. Supports ## headings, **bold**, `code`, ``` fenced code blocks, - bullet lists, 1. ordered lists, [label](url) links.' },
         },
         required: ['issueKey', 'commentId', 'body'],
       },
@@ -292,13 +421,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     // — Tempo —
     {
       name: 'tempo_get_worklogs',
-      description: 'Fetch Tempo worklogs for a given Jira issue (by numeric issue ID).',
+      description: 'Fetch Tempo worklogs for a given Jira issue. Provide either issueKey (e.g. "SLODEV-383") or the numeric issueId.',
       inputSchema: {
         type: 'object',
         properties: {
-          issueId: { type: 'string', description: 'Numeric Jira issue ID.' },
+          issueKey: { type: 'string', description: 'Jira issue key, e.g. "SLODEV-383". Preferred over issueId.' },
+          issueId: { type: 'string', description: 'Numeric Jira issue ID. Use issueKey instead when possible.' },
         },
-        required: ['issueId'],
+        required: [],
       },
     },
     {
@@ -316,17 +446,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'tempo_log_time',
-      description: 'Log time against a Jira issue via Tempo.',
+      description: 'Log time against a Jira issue via Tempo. Provide either issueKey (e.g. "SLODEV-383") or the numeric issueId.',
       inputSchema: {
         type: 'object',
         properties: {
-          issueId: { type: 'number', description: 'Numeric Jira issue ID.' },
+          issueKey: { type: 'string', description: 'Jira issue key, e.g. "SLODEV-383". Preferred over issueId.' },
+          issueId: { type: 'number', description: 'Numeric Jira issue ID. Use issueKey instead when possible.' },
           timeSpentSeconds: { type: 'number', description: 'Duration in seconds.' },
           startDate: { type: 'string', description: 'Date of the worklog in YYYY-MM-DD format.' },
           startTime: { type: 'string', description: 'Start time in HH:MM:SS format (optional).' },
           description: { type: 'string', description: 'Optional worklog description.' },
         },
-        required: ['issueId', 'timeSpentSeconds', 'startDate'],
+        required: ['timeSpentSeconds', 'startDate'],
       },
     },
 
@@ -482,25 +613,92 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
 
+    // — Jira users —
+    {
+      name: 'jira_lookup_user',
+      description: 'Search for Jira users by name or email address. Returns accountId, displayName, and emailAddress for each match.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Name or email to search for, e.g. "Sjoerd" or "sjoerd@example.com".' },
+          maxResults: { type: 'number', description: 'Maximum number of results to return (default 10).' },
+        },
+        required: ['query'],
+      },
+    },
+
+    // — Jira assign —
+    {
+      name: 'jira_assign_issue',
+      description: 'Assign a Jira issue to a user by accountId.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          issueKey: { type: 'string', description: 'Jira issue key, e.g. "PROJ-123".' },
+          assigneeAccountId: { type: 'string', description: 'The Jira accountId of the user to assign.' },
+        },
+        required: ['issueKey', 'assigneeAccountId'],
+      },
+    },
+    {
+      name: 'jira_assign_to_test',
+      description: 'Transition a Jira issue to the nearest "Ready for Test" status, assign it to a tester, and post a test comment — all in one action.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          issueKey: { type: 'string', description: 'Jira issue key, e.g. "PROJ-123".' },
+          assigneeAccountId: { type: 'string', description: 'The Jira accountId of the tester to assign.' },
+          testUrl: { type: 'string', description: 'URL where the feature can be tested.' },
+          testInstructions: { type: 'string', description: 'Instructions for the tester.' },
+        },
+        required: ['issueKey', 'assigneeAccountId'],
+      },
+    },
+
     // — Tempo extras —
     {
+      name: 'tempo_get_my_teams',
+      description: 'List the Tempo teams the current user is a member of. Returns teamId and name. Use teamId with tempo_team_hours to get reliable team-wide worklogs.',
+      inputSchema: { type: 'object', properties: {}, required: [] },
+    },
+    {
       name: 'tempo_week_summary',
-      description: 'Total hours logged per day and per Jira project key for the current or previous week. Great for timesheet review.',
+      description: 'Total hours logged per day and per Jira project key for the current or previous week. Defaults to the current Jira user; pass accountId to check another team member.',
       inputSchema: {
         type: 'object',
         properties: {
           week: { type: 'string', description: '"current" (default) or "previous".' },
+          accountId: { type: 'string', description: 'Jira accountId to check. Omit for yourself.' },
         },
         required: [],
       },
     },
     {
       name: 'tempo_missing_days',
-      description: 'List working days with zero Tempo time logged within a date range. Helps catch days you forgot to fill in.',
+      description: 'List working days with zero Tempo time logged within a date range. Defaults to the current Jira user; pass accountId to check another team member.',
       inputSchema: {
         type: 'object',
         properties: {
           from: { type: 'string', description: 'Start date YYYY-MM-DD (default: start of current month).' },
+          to: { type: 'string', description: 'End date YYYY-MM-DD (default: today).' },
+          accountId: { type: 'string', description: 'Jira accountId to check. Omit for yourself.' },
+        },
+        required: [],
+      },
+    },
+    {
+      name: 'tempo_team_hours',
+      description: 'Fetch logged hours for a Tempo team (by teamId) or a list of accountIds over a date range. Using teamId is the reliable approach — it returns all members\'s worklogs in one call without permission issues. Returns per-person totals and missing weekdays.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          teamId: { type: 'number', description: 'Tempo team ID (from tempo_get_my_teams). Preferred over accountIds.' },
+          accountIds: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Fallback: list of Jira accountIds to query individually. Use teamId instead when possible.',
+          },
+          from: { type: 'string', description: 'Start date YYYY-MM-DD (default: start of current week).' },
           to: { type: 'string', description: 'End date YYYY-MM-DD (default: today).' },
         },
         required: [],
@@ -748,8 +946,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'tempo_get_worklogs': {
-        const { issueId } = args as { issueId: string };
-        if (!/^\d+$/.test(issueId)) throw new Error('issueId must be a positive integer');
+        let { issueId, issueKey: wlIssueKey } = args as { issueId?: string; issueKey?: string };
+        if (!issueId && !wlIssueKey) throw new Error('Provide either issueKey (e.g. "SLODEV-383") or issueId.');
+        if (wlIssueKey && !issueId) {
+          const issueData = await jiraFetch(`/rest/api/3/issue/${encodeURIComponent(wlIssueKey)}?fields=summary`);
+          issueId = String(issueData.id);
+        }
+        if (!/^\d+$/.test(issueId!)) throw new Error('issueId must be a positive integer');
         const token = tempoToken();
         const res = await fetch(`https://api.tempo.io/4/worklogs?issueId=${issueId}&limit=200`, {
           headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
@@ -759,8 +962,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'tempo_log_time': {
-        const { issueId, timeSpentSeconds, startDate, startTime, description } =
-          args as { issueId: number; timeSpentSeconds: number; startDate: string; startTime?: string; description?: string };
+        let { issueId, issueKey: logIssueKey, timeSpentSeconds, startDate, startTime, description } =
+          args as { issueId?: number; issueKey?: string; timeSpentSeconds: number; startDate: string; startTime?: string; description?: string };
+        if (!issueId && !logIssueKey) throw new Error('Provide either issueKey (e.g. "SLODEV-383") or issueId.');
+        if (logIssueKey && !issueId) {
+          const issueData = await jiraFetch(`/rest/api/3/issue/${encodeURIComponent(logIssueKey)}?fields=summary`);
+          issueId = Number(issueData.id);
+        }
         const token = tempoToken();
         // Resolve the current Jira user so Tempo knows who logged the time
         const me = await jiraFetch('/rest/api/3/myself');
@@ -803,12 +1011,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         type WLEntry = { issueKey: string; description: string; timeSpentSeconds: number };
         const worklogsByDate: Record<string, WLEntry[]> = {};
         const wlRes = await fetch(
-          `https://api.tempo.io/4/worklogs?accountId=${myAccountId}&from=${fromDateStr}&to=${todayStr}&limit=200`,
+          `https://api.tempo.io/4/worklogs?authorAccountId=${myAccountId}&from=${fromDateStr}&to=${todayStr}&limit=200`,
           { headers: { Authorization: `Bearer ${standupToken}`, Accept: 'application/json' } },
         );
         if (wlRes.ok) {
           const wlData = await wlRes.json() as { results?: Record<string, unknown>[] };
-          for (const wl of (wlData.results ?? [])) {
+          // Defensive client-side filter: admin tokens may ignore authorAccountId
+          const mine = (wlData.results ?? []).filter((w) => {
+            const authorId = (w.author as Record<string, unknown>)?.accountId as string | undefined;
+            return !authorId || authorId === myAccountId;
+          });
+          for (const wl of mine) {
             const d = wl.startDate as string;
             if (!worklogsByDate[d]) worklogsByDate[d] = [];
             const issueObj = wl.issue as Record<string, unknown>;
@@ -1314,8 +1527,39 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       // ── Tempo extras ──────────────────────────────────────────────────────
 
+      case 'tempo_get_my_teams': {
+        const token = tempoToken();
+        const meData = await jiraFetch('/rest/api/3/myself');
+        const myId = meData.accountId as string;
+
+        const teamsRes = await fetch('https://api.tempo.io/4/teams?limit=100', {
+          headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        });
+        if (!teamsRes.ok) throw new Error(`Tempo ${teamsRes.status}: ${(await teamsRes.text()).slice(0, 200)}`);
+        const teamsData = await teamsRes.json() as { results?: { id: number; name: string }[] };
+        const allTeams = teamsData.results ?? [];
+
+        const checks = await Promise.all(
+          allTeams.map(async (team) => {
+            try {
+              const r = await fetch(`https://api.tempo.io/4/teams/${team.id}/members`, {
+                headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+              });
+              if (!r.ok) return null;
+              const d = await r.json() as { results?: { member?: { accountId?: string }; accountId?: string }[] };
+              const isMember = (d.results ?? []).some(
+                (m) => m.member?.accountId === myId || m.accountId === myId,
+              );
+              return isMember ? { id: team.id, name: team.name } : null;
+            } catch { return null; }
+          }),
+        );
+        const myTeams = checks.filter(Boolean);
+        return ok({ teams: myTeams, total: myTeams.length });
+      }
+
       case 'tempo_week_summary': {
-        const { week = 'current' } = args as { week?: string };
+        const { week = 'current', accountId: wkAccountId } = args as { week?: string; accountId?: string };
         const today = new Date();
         const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon...
         const diffToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
@@ -1325,18 +1569,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         friday.setDate(monday.getDate() + 4);
         const fmt = (d: Date) => d.toISOString().slice(0, 10);
         const token = tempoToken();
-        const me = await jiraFetch('/rest/api/3/myself');
-        const myId: string = me.accountId;
+        const targetId = wkAccountId ?? ((await jiraFetch('/rest/api/3/myself')).accountId as string);
         const res = await fetch(
-          `https://api.tempo.io/4/worklogs?accountId=${myId}&from=${fmt(monday)}&to=${fmt(friday)}&limit=500`,
+          `https://api.tempo.io/4/worklogs?authorAccountId=${targetId}&from=${fmt(monday)}&to=${fmt(friday)}&limit=500`,
           { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } },
         );
         if (!res.ok) throw new Error(`Tempo ${res.status}: ${(await res.text()).slice(0, 200)}`);
         const data = await res.json() as { results?: Record<string, unknown>[] };
+        // Defensive client-side filter in case admin token ignores the param
+        const filtered = (data.results ?? []).filter((w) => {
+          const id = (w.author as Record<string, unknown>)?.accountId as string | undefined;
+          return !id || id === targetId;
+        });
         const byDay: Record<string, number> = {};
         const byProject: Record<string, number> = {};
         let totalSecs = 0;
-        for (const wl of (data.results ?? [])) {
+        for (const wl of filtered) {
           const d = wl.startDate as string;
           const secs = (wl.timeSpentSeconds as number) ?? 0;
           byDay[d] = (byDay[d] ?? 0) + secs;
@@ -1349,24 +1597,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const fmtSecs = (s: number) => `${Math.floor(s / 3600)}h${Math.floor((s % 3600) / 60).toString().padStart(2, '0')}m`;
         const byDayFormatted = Object.fromEntries(Object.entries(byDay).sort().map(([d, s]) => [d, fmtSecs(s)]));
         const byProjectFormatted = Object.fromEntries(Object.entries(byProject).map(([p, s]) => [p, fmtSecs(s)]));
-        return ok({ week: `${fmt(monday)} – ${fmt(friday)}`, totalLogged: fmtSecs(totalSecs), byDay: byDayFormatted, byProject: byProjectFormatted });
+        return ok({ accountId: targetId, week: `${fmt(monday)} – ${fmt(friday)}`, totalLogged: fmtSecs(totalSecs), byDay: byDayFormatted, byProject: byProjectFormatted });
       }
 
       case 'tempo_missing_days': {
         const today = new Date();
         const defaultFrom = new Date(today.getFullYear(), today.getMonth(), 1);
-        const { from = defaultFrom.toISOString().slice(0, 10), to = today.toISOString().slice(0, 10) } =
-          args as { from?: string; to?: string };
+        const { from = defaultFrom.toISOString().slice(0, 10), to = today.toISOString().slice(0, 10), accountId: mdAccountId } =
+          args as { from?: string; to?: string; accountId?: string };
         const token = tempoToken();
-        const me = await jiraFetch('/rest/api/3/myself');
-        const myId: string = me.accountId;
+        const targetId = mdAccountId ?? ((await jiraFetch('/rest/api/3/myself')).accountId as string);
         const res = await fetch(
-          `https://api.tempo.io/4/worklogs?accountId=${myId}&from=${from}&to=${to}&limit=500`,
+          `https://api.tempo.io/4/worklogs?authorAccountId=${targetId}&from=${from}&to=${to}&limit=500`,
           { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } },
         );
         if (!res.ok) throw new Error(`Tempo ${res.status}: ${(await res.text()).slice(0, 200)}`);
         const data = await res.json() as { results?: Record<string, unknown>[] };
-        const loggedDays = new Set((data.results ?? []).map((wl) => wl.startDate as string));
+        // Defensive client-side filter in case admin token ignores the param
+        const filtered = (data.results ?? []).filter((w) => {
+          const id = (w.author as Record<string, unknown>)?.accountId as string | undefined;
+          return !id || id === targetId;
+        });
+        const loggedDays = new Set(filtered.map((wl) => wl.startDate as string));
         // Enumerate weekdays in range
         const missing: string[] = [];
         const cur = new Date(from);
@@ -1379,7 +1631,108 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
           cur.setDate(cur.getDate() + 1);
         }
-        return ok({ from, to, missingDays: missing, missingCount: missing.length, loggedDaysCount: loggedDays.size });
+        return ok({ accountId: targetId, from, to, missingDays: missing, missingCount: missing.length, loggedDaysCount: loggedDays.size });
+      }
+
+      case 'tempo_team_hours': {
+        const today = new Date();
+        // Default: current week Monday to today
+        const dayOfWeek = today.getDay();
+        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const defaultFrom = new Date(today);
+        defaultFrom.setDate(today.getDate() + diffToMonday);
+        const {
+          teamId,
+          accountIds,
+          from = defaultFrom.toISOString().slice(0, 10),
+          to = today.toISOString().slice(0, 10),
+        } = args as { teamId?: number; accountIds?: string[]; from?: string; to?: string };
+
+        const token = tempoToken();
+        const fmtSecs = (s: number) => `${Math.floor(s / 3600)}h${Math.floor((s % 3600) / 60).toString().padStart(2, '0')}m`;
+
+        // Helper: enumerate weekdays between two YYYY-MM-DD strings (up to today)
+        const todayStr = today.toISOString().slice(0, 10);
+        const weekdaysInRange: string[] = [];
+        const wdCur = new Date(from);
+        const wdEnd = new Date(to);
+        while (wdCur <= wdEnd) {
+          const dow = wdCur.getDay();
+          const d = wdCur.toISOString().slice(0, 10);
+          if (dow !== 0 && dow !== 6 && d <= todayStr) weekdaysInRange.push(d);
+          wdCur.setDate(wdCur.getDate() + 1);
+        }
+
+        // Helper: summarise a list of raw Tempo worklog results into per-person stats
+        const summariseByAuthor = (raw: Record<string, unknown>[]) => {
+          const byAuthor: Record<string, { displayName: string; secs: number; days: Set<string> }> = {};
+          for (const wl of raw) {
+            const authorObj = wl.author as Record<string, unknown>;
+            const id = authorObj?.accountId as string ?? 'unknown';
+            const name = authorObj?.displayName as string ?? id;
+            if (!byAuthor[id]) byAuthor[id] = { displayName: name, secs: 0, days: new Set() };
+            const secs = (wl.timeSpentSeconds as number) ?? 0;
+            byAuthor[id].secs += secs;
+            byAuthor[id].days.add(wl.startDate as string);
+          }
+          return Object.entries(byAuthor).map(([id, info]) => ({
+            accountId: id,
+            displayName: info.displayName,
+            totalLogged: fmtSecs(info.secs),
+            missingDays: weekdaysInRange.filter((d) => !info.days.has(d)),
+            missingCount: weekdaysInRange.filter((d) => !info.days.has(d)).length,
+          }));
+        };
+
+        if (teamId != null) {
+          // Preferred path: fetch all worklogs for a team at once
+          const res = await fetch(
+            `https://api.tempo.io/4/worklogs?teamId=${teamId}&from=${from}&to=${to}&limit=1000`,
+            { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } },
+          );
+          if (!res.ok) throw new Error(`Tempo ${res.status}: ${(await res.text()).slice(0, 200)}`);
+          const data = await res.json() as { results?: Record<string, unknown>[] };
+          return ok({ from, to, teamId, members: summariseByAuthor(data.results ?? []) });
+        }
+
+        // Fallback: per-person queries using authorAccountId
+        const targets: string[] = accountIds?.length
+          ? accountIds
+          : [((await jiraFetch('/rest/api/3/myself')).accountId as string)];
+
+        const results = await Promise.all(
+          targets.map(async (id) => {
+            const res = await fetch(
+              `https://api.tempo.io/4/worklogs?authorAccountId=${id}&from=${from}&to=${to}&limit=500`,
+              { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } },
+            );
+            if (!res.ok) return { accountId: id, error: `Tempo ${res.status}` };
+            const data = await res.json() as { results?: Record<string, unknown>[] };
+            // Client-side filter: admin tokens may return more than just this user
+            const mine = (data.results ?? []).filter((w) => {
+              const aid = (w.author as Record<string, unknown>)?.accountId as string | undefined;
+              return !aid || aid === id;
+            });
+            const loggedDays = new Set(mine.map((wl) => wl.startDate as string));
+            let totalSecs = 0;
+            const byDay: Record<string, number> = {};
+            for (const wl of mine) {
+              const secs = (wl.timeSpentSeconds as number) ?? 0;
+              totalSecs += secs;
+              byDay[wl.startDate as string] = (byDay[wl.startDate as string] ?? 0) + secs;
+            }
+            const missingDays = weekdaysInRange.filter((d) => !loggedDays.has(d));
+            return {
+              accountId: id,
+              totalLogged: fmtSecs(totalSecs),
+              byDay: Object.fromEntries(Object.entries(byDay).sort().map(([d, s]) => [d, fmtSecs(s)])),
+              missingDays,
+              missingCount: missingDays.length,
+            };
+          }),
+        );
+
+        return ok({ from, to, members: results });
       }
 
       // ── Azure DevOps ──────────────────────────────────────────────────────
@@ -1531,6 +1884,78 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!res.ok) throw new Error(`Jira ${res.status}: ${(await res.text()).slice(0, 300)}`);
         const comment = await res.json() as { id: string };
         return ok({ jiraKey, commentId: comment.id, prUrl, message: 'PR link posted to Jira issue' });
+      }
+
+      // ── Jira users ───────────────────────────────────────────────────────
+
+      case 'jira_lookup_user': {
+        const { query, maxResults = 10 } = args as { query: string; maxResults?: number };
+        const data = await jiraFetch(
+          `/rest/api/3/user/search?query=${encodeURIComponent(query)}&maxResults=${maxResults}`,
+        );
+        const users = (Array.isArray(data) ? data : []).map((u: Record<string, unknown>) => ({
+          accountId: u.accountId,
+          displayName: u.displayName,
+          emailAddress: u.emailAddress,
+          active: u.active,
+        }));
+        return ok({ users, total: users.length });
+      }
+
+      // ── Jira assign ───────────────────────────────────────────────────────
+
+      case 'jira_assign_issue': {
+        const { issueKey, assigneeAccountId } = args as { issueKey: string; assigneeAccountId: string };
+        await jiraFetch(`/rest/api/3/issue/${encodeURIComponent(issueKey)}/assignee`, {
+          method: 'PUT',
+          body: JSON.stringify({ accountId: assigneeAccountId }),
+        });
+        return ok({ assigned: true, issueKey, assigneeAccountId });
+      }
+
+      case 'jira_assign_to_test': {
+        const { issueKey, assigneeAccountId, testUrl, testInstructions } =
+          args as { issueKey: string; assigneeAccountId: string; testUrl?: string; testInstructions?: string };
+
+        // 1. Find a "ready for test" transition (case-insensitive)
+        const transData = await jiraFetch(`/rest/api/3/issue/${encodeURIComponent(issueKey)}/transitions`);
+        const transitions: Array<{ id: string; name: string }> = transData.transitions ?? [];
+        const testTransition = transitions.find((t) =>
+          /test/i.test(t.name),
+        );
+        if (!testTransition) {
+          throw new Error(
+            `No transition matching "test" found for ${issueKey}. Available: ${transitions.map((t) => t.name).join(', ')}`,
+          );
+        }
+
+        // 2. Apply the transition
+        await jiraFetch(`/rest/api/3/issue/${encodeURIComponent(issueKey)}/transitions`, {
+          method: 'POST',
+          body: JSON.stringify({ transition: { id: testTransition.id } }),
+        });
+
+        // 3. Assign the issue
+        await jiraFetch(`/rest/api/3/issue/${encodeURIComponent(issueKey)}/assignee`, {
+          method: 'PUT',
+          body: JSON.stringify({ accountId: assigneeAccountId }),
+        });
+
+        // 4. Post a test comment
+        const commentParts: string[] = ['This issue is ready for testing.'];
+        if (testUrl) commentParts.push(`Test URL: ${testUrl}`);
+        if (testInstructions) commentParts.push(`\nInstructions:\n${testInstructions}`);
+        const commentData = await jiraFetch(`/rest/api/3/issue/${encodeURIComponent(issueKey)}/comment`, {
+          method: 'POST',
+          body: JSON.stringify({ body: textToAdf(commentParts.join('\n')) }),
+        });
+
+        return ok({
+          issueKey,
+          transitioned: testTransition.name,
+          assigned: assigneeAccountId,
+          commentId: commentData.id,
+        });
       }
 
       default:
