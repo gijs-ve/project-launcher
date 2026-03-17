@@ -309,6 +309,9 @@ function HoursTab({
   originalEstimateSeconds?: number | null;
   projectId?: string;
 }) {
+  const { config } = useConfig();
+  const defaultDescription = config.tempo?.defaultDescription ?? '';
+
   const [worklogs, setWorklogs]         = useState<TempoWorklog[]>([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState<string | null>(null);
@@ -362,7 +365,7 @@ function HoursTab({
           authorAccountId: currentUserAccountId,
           timeSpentSeconds: timeSeconds,
           startDate: date,
-          description,
+          description: description.trim() || defaultDescription,
         }),
       });
       if (!r.ok) {
@@ -444,7 +447,7 @@ function HoursTab({
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional…"
+            placeholder={defaultDescription || 'Description…'}
             className="input flex-1"
           />
         </div>

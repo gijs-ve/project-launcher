@@ -659,6 +659,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
     // — Tempo extras —
     {
+      name: 'tempo_update_worklog',
+      description: 'Update an existing Tempo worklog by its tempoWorklogId. Use this to fix the description, adjust time spent, or change the date. Requires the worklog ID (from tempo_get_worklogs), issueId, and the full set of worklog fields (Tempo requires all fields on PUT).',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          tempoWorklogId: { type: 'number', description: 'The numeric Tempo worklog ID to update.' },
+          issueId: { type: 'number', description: 'Numeric Jira issue ID the worklog belongs to.' },
+          issueKey: { type: 'string', description: 'Jira issue key (e.g. "SLODEV-383"). Used to resolve issueId if issueId is not provided.' },
+          timeSpentSeconds: { type: 'number', description: 'Duration in seconds.' },
+          startDate: { type: 'string', description: 'Date of the worklog in YYYY-MM-DD format.' },
+          description: { type: 'string', description: 'New worklog description.' },
+        },
+        required: ['tempoWorklogId', 'timeSpentSeconds', 'startDate'],
+      },
+    },
+    {
       name: 'tempo_get_my_teams',
       description: 'List the Tempo teams the current user is a member of. Returns teamId and name. Use teamId with tempo_team_hours to get reliable team-wide worklogs.',
       inputSchema: { type: 'object', properties: {}, required: [] },
@@ -989,6 +1005,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         });
         if (!res.ok) throw new Error(`Tempo API ${res.status}: ${(await res.text()).slice(0, 200)}`);
         return ok(await res.json());
+      }
+
+      case 'tempo_update_worklog': {
+        let { tempoWorklogId, issueId: updateIssueId, issueKey: updateIssueKey, timeSpentSeconds: updateTime, startDate: updateDate, description: updateDesc } =
+          args as { tempoWorklogId: number; issueId?: number; issueKey?: string; timeSpentSeconds: number; startDate: string; description?: string };
+        if (!updateIssueId && !updateIssueKey) throw new Error('Provide either issueKey or issueId.');
+        if (updateIssueKey && !updateIssueId) {
+          const issueData = await jiraFetch(`/rest/api/3/issue/${encodeURIComponent(updateIssueKey)}?fields=summary`);
+          updateIssueId = Number(issueData.id);
+        }
+        const updateToken = tempoToken();
+        const updateMe = await jiraFetch('/rest/api/3/myself');
+        const updateAuthor: string = updateMe.accountId;
+        const updateRes = await fetch(`https://api.tempo.io/4/worklogs/${tempoWorklogId}`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${updateToken}`, Accept: 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ issueId: updateIssueId, authorAccountId: updateAuthor, timeSpentSeconds: updateTime, startDate: updateDate, description: updateDesc ?? '' }),
+        });
+        if (!updateRes.ok) throw new Error(`Tempo API ${updateRes.status}: ${(await updateRes.text()).slice(0, 200)}`);
+        return ok(await updateRes.json());
       }
 
       // ── Standup ───────────────────────────────────────────────────────────

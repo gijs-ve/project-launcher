@@ -186,6 +186,61 @@ router.post('/worklogs', async (req: Request, res: Response) => {
   }
 });
 
+// PUT /api/tempo/worklogs/:id
+// Updates an existing TEMPO worklog (description, timeSpentSeconds, startDate, etc.).
+router.put('/worklogs/:id', async (req: Request, res: Response) => {
+  try {
+    const id = String(req.params.id);
+
+    if (!/^\d+$/.test(id)) {
+      res.status(400).json({ error: 'Worklog id must be a positive integer' });
+      return;
+    }
+
+    const { issueId, authorAccountId, timeSpentSeconds, startDate, description } = req.body as {
+      issueId?: number;
+      authorAccountId?: string;
+      timeSpentSeconds?: number;
+      startDate?: string;
+      description?: string;
+    };
+
+    if (!issueId || !authorAccountId || !timeSpentSeconds || !startDate) {
+      res.status(400).json({ error: 'issueId, authorAccountId, timeSpentSeconds, and startDate are required' });
+      return;
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+      res.status(400).json({ error: 'startDate must be in YYYY-MM-DD format' });
+      return;
+    }
+
+    const ctx = resolveTempoToken();
+    if ('error' in ctx) { res.status(400).json({ error: ctx.error }); return; }
+
+    const response = await fetch(`${TEMPO_BASE}/worklogs/${id}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${ctx.token}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ issueId, authorAccountId, timeSpentSeconds, startDate, description: description ?? '' }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      res.status(response.status).json({ error: `TEMPO API error ${response.status}: ${text.slice(0, 300)}` });
+      return;
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(502).json({ error: `TEMPO proxy error: ${String(err)}` });
+  }
+});
+
 // DELETE /api/tempo/worklogs/:id
 // Deletes a TEMPO worklog by its tempoWorklogId.
 router.delete('/worklogs/:id', async (req: Request, res: Response) => {

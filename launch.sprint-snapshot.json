@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-03-16T08:44:15.733Z",
+  "savedAt": "2026-03-17T09:36:48.865Z",
   "issues": [
     {
       "key": "AS-12",
@@ -38,48 +38,21 @@
       "project": "AS"
     },
     {
-      "key": "SLODEV-399",
-      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
-      "status": "In Progress",
+      "key": "SLODEV-326",
+      "summary": "Aanpassen 'pillen' op leergebiedpagina's",
+      "status": "To Do",
       "assignee": "Unassigned",
-      "priority": "Minor",
+      "priority": "Major",
       "type": "Task",
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-383",
-      "summary": "Mailchimp formulier embedden via content element",
-      "status": "In Progress",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-381",
-      "summary": "Leergebied pagina's zijn niet vindbaar in zoekpagina",
-      "status": "In Progress",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-386",
-      "summary": "Standaard link naar overzichtspagina bij FAQ component",
-      "status": "Ready for Test",
+      "key": "SLODEV-378",
+      "summary": "Feedback: Inhoud downloadoverzicht klopt niet",
+      "status": "To Do",
       "assignee": "Unassigned",
       "priority": "Minor",
-      "type": "Story",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-394",
-      "summary": "Links naar mediabak werken niet",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
+      "type": "Task",
       "project": "SLODEV"
     },
     {
@@ -92,8 +65,71 @@
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-387",
-      "summary": "Extern link icoon is heel groot",
+      "key": "SLODEV-376",
+      "summary": "Karakteristiek: Popup uitbreiden met accordion functie",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-377",
+      "summary": "Feedback sprint #1",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-383",
+      "summary": "Mailchimp formulier embedden via content element",
+      "status": "Ready for Test",
+      "assignee": "Sjoerd de Wildt",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-384",
+      "summary": "Call to action blok uitbreiden met shared content optie",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-386",
+      "summary": "Standaard link naar overzichtspagina bij FAQ component",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-390",
+      "summary": "Feedback Leerlijnen",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-399",
+      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
+      "status": "In Progress",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-381",
+      "summary": "Leergebied pagina's zijn niet vindbaar in zoekpagina",
       "status": "Ready for Test",
       "assignee": "Unassigned",
       "priority": "Minor",
@@ -101,12 +137,21 @@
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-376",
-      "summary": "Karakteristiek: Popup uitbreiden met accordion functie",
+      "key": "SLODEV-394",
+      "summary": "Links naar mediabak werken niet",
       "status": "Ready for Test",
       "assignee": "Unassigned",
       "priority": "Minor",
-      "type": "Story",
+      "type": "Sub-task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-387",
+      "summary": "Extern link icoon is heel groot",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Sub-task",
       "project": "SLODEV"
     },
     {
@@ -128,15 +173,6 @@
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-390",
-      "summary": "Feedback Leerlijnen",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Task",
-      "project": "SLODEV"
-    },
-    {
       "key": "SLODEV-382",
       "summary": "Nieuws en inspiratie component ook per leergebied tonen",
       "status": "To Do",
@@ -152,42 +188,6 @@
       "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Sub-task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-326",
-      "summary": "Aanpassen 'pillen' op leergebiedpagina's",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Major",
-      "type": "Task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-377",
-      "summary": "Feedback sprint #1",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-378",
-      "summary": "Feedback: Inhoud downloadoverzicht klopt niet",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-384",
-      "summary": "Call to action blok uitbreiden met shared content optie",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
       "project": "SLODEV"
     },
     {
@@ -218,39 +218,21 @@
       "project": "SLOONT"
     },
     {
-      "key": "SNDEV-19",
-      "summary": "Zoekpagina opzetten",
-      "status": "Ready for Test",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-17",
-      "summary": "(FE) Accordeon element",
-      "status": "In Review",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-14",
-      "summary": "(FE) Afbeelding & Video element",
-      "status": "In Review",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
       "key": "SNDEV-99",
       "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
       "status": "Ready for Test",
       "assignee": "Sebastiaan Steenbrink",
       "priority": "Minor",
       "type": "Task",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-30",
+      "summary": "(FE) Homepage opzetten",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
       "project": "SNDEV"
     },
     {
@@ -261,25 +243,105 @@
       "priority": "Minor",
       "type": "Story",
       "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-14",
+      "summary": "(FE) Afbeelding & Video element",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-17",
+      "summary": "(FE) Accordeon element",
+      "status": "Ready for Test",
+      "assignee": "Sjoerd de Wildt",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-19",
+      "summary": "Zoekpagina opzetten",
+      "status": "Ready for Test",
+      "assignee": "Sjoerd de Wildt",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-21",
+      "summary": "(FE) RTE styling",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-22",
+      "summary": "(FE) Tekstrij element",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-23",
+      "summary": "(FE) Inline button",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-24",
+      "summary": "(FE) Hero opzetten",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-25",
+      "summary": "(FE) Kruimelpad toevoegen",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-27",
+      "summary": "(FE) Contentpagina opzetten",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
     }
   ],
   "statsByProject": {
     "AS": 4,
     "SLODEV": 17,
     "SLOONT": 3,
-    "SNDEV": 5
+    "SNDEV": 12
   },
   "statsByStatus": {
-    "Ready for Test": 13,
+    "Ready for Test": 17,
     "To Do": 10,
-    "In Progress": 3,
-    "Ready for Refinement": 1,
-    "In Review": 2
+    "In Progress": 8,
+    "Ready for Refinement": 1
   },
   "statsByAssignee": {
-    "Unassigned": 22,
-    "Gijsbert van Everdingen": 5,
+    "Unassigned": 24,
+    "Sjoerd de Wildt": 4,
     "Sebastiaan Steenbrink": 1,
-    "Sjoerd de Wildt": 1
+    "Gijsbert van Everdingen": 7
   }
 }
