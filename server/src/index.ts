@@ -7,6 +7,7 @@ import configRouter from './routes/config.js';
 import processesRouter from './routes/processes.js';
 import jiraRouter from './routes/jira.js';
 import tempoRouter from './routes/tempo.js';
+import adoRouter from './routes/ado.js';
 import { processManager } from './processes.js';
 import { ClientMessage } from './types.js';
 
@@ -43,6 +44,7 @@ app.use('/api/config', configRouter);
 app.use('/api/projects', processesRouter);
 app.use('/api/jira', jiraRouter);
 app.use('/api/tempo', tempoRouter);
+app.use('/api/ado', adoRouter);
 
 // Health check
 app.get('/health', (_req, res) => res.json({ ok: true }));

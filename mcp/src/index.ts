@@ -778,6 +778,47 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ['jiraKey', 'prUrl'],
       },
     },
+    {
+      name: 'ado_list_prs',
+      description: 'List pull requests across all configured ADO repositories. Unlike ado_list_my_prs this is NOT filtered to the current user — use creatorName to find a specific colleague\'s PRs (partial, case-insensitive match on display name).',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', description: '"active" (default), "completed", "abandoned", or "all".' },
+          creatorName: { type: 'string', description: 'Partial, case-insensitive match on the PR author\'s display name, e.g. "davey".' },
+          reviewerName: { type: 'string', description: 'Partial, case-insensitive match on a reviewer\'s display name to filter PRs where that person is a reviewer.' },
+        },
+        required: [],
+      },
+    },
+    {
+      name: 'ado_add_pr_comment',
+      description: 'Add a top-level review comment (new thread) to an ADO pull request.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          prId: { type: 'number', description: 'Pull request ID.' },
+          content: { type: 'string', description: 'Comment text (plain text / Markdown).' },
+          adoProject: { type: 'string', description: 'ADO project name. Uses first configured adoProject if omitted.' },
+          repoId: { type: 'string', description: 'Repository name or ID. Uses first configured adoRepoId if omitted.' },
+        },
+        required: ['prId', 'content'],
+      },
+    },
+    {
+      name: 'ado_vote_pr',
+      description: 'Cast a vote on an ADO pull request as the authenticated user (the owner of the PAT token).',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          prId: { type: 'number', description: 'Pull request ID.' },
+          vote: { type: 'string', description: '"approve", "approve-with-suggestions", "reject", "wait", or "reset" (removes vote).' },
+          adoProject: { type: 'string', description: 'ADO project name. Uses first configured adoProject if omitted.' },
+          repoId: { type: 'string', description: 'Repository name or ID. Uses first configured adoRepoId if omitted.' },
+        },
+        required: ['prId', 'vote'],
+      },
+    },
   ],
 }));
 
@@ -1896,6 +1937,99 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         const prUrl = `${orgUrl}/${proj.adoProject}/_git/${proj.adoRepoId}/pullrequest/${prData.pullRequestId}`;
         return ok({ id: prData.pullRequestId, title: resolvedTitle, sourceBranch: currentBranch, targetBranch, url: prUrl, isDraft: draft });
+      }
+
+      case 'ado_list_prs': {
+        const { status = 'active', creatorName, reviewerName } = args as { status?: string; creatorName?: string; reviewerName?: string };
+        const { orgUrl } = adoCtx();
+        const cfg = readConfig();
+        const repos = cfg.projects.filter((p) => p.adoProject && p.adoRepoId);
+        if (!repos.length) throw new Error('No projects have adoProject + adoRepoId configured');
+        const allPRs: unknown[] = [];
+        await Promise.all(repos.map(async (p) => {
+          const url = `${orgUrl}/${encodeURIComponent(p.adoProject!)}/_apis/git/repositories/${encodeURIComponent(p.adoRepoId!)}/pullrequests?searchCriteria.status=${status}&api-version=7.1`;
+          const data = await adoFetch(url);
+          const prs = (data.value as Record<string, unknown>[] ?? []).map((pr) => ({
+            id: pr.pullRequestId,
+            title: pr.title,
+            status: pr.status,
+            sourceBranch: (pr.sourceRefName as string)?.replace('refs/heads/', ''),
+            targetBranch: (pr.targetRefName as string)?.replace('refs/heads/', ''),
+            createdBy: (pr.createdBy as Record<string, unknown>)?.displayName,
+            creationDate: pr.creationDate,
+            isDraft: pr.isDraft,
+            reviewers: (pr.reviewers as Record<string, unknown>[] ?? []).map((r) => ({
+              name: r.displayName, vote: r.vote,
+            })),
+            url: `${orgUrl}/${p.adoProject}/_git/${p.adoRepoId}/pullrequest/${pr.pullRequestId}`,
+            project: p.id,
+          }));
+          allPRs.push(...prs);
+        }));
+
+        type PR = { createdBy: unknown; reviewers: Array<{ name: unknown }> };
+        let filtered = allPRs as PR[];
+
+        if (creatorName) {
+          const q = creatorName.toLowerCase();
+          filtered = filtered.filter((pr) =>
+            typeof pr.createdBy === 'string' && pr.createdBy.toLowerCase().includes(q),
+          );
+        }
+        if (reviewerName) {
+          const q = reviewerName.toLowerCase();
+          filtered = filtered.filter((pr) =>
+            pr.reviewers.some((r) => typeof r.name === 'string' && r.name.toLowerCase().includes(q)),
+          );
+        }
+        return ok({ total: filtered.length, pullRequests: filtered });
+      }
+
+      case 'ado_add_pr_comment': {
+        const { prId, content, adoProject: adoProjArg, repoId: repoIdArg } = args as { prId: number; content: string; adoProject?: string; repoId?: string };
+        const { orgUrl } = adoCtx();
+        const cfg = readConfig();
+        const proj = cfg.projects.find((p) => p.adoProject && p.adoRepoId &&
+          (!adoProjArg || p.adoProject === adoProjArg) && (!repoIdArg || p.adoRepoId === repoIdArg)
+        ) ?? cfg.projects.find((p) => p.adoProject && p.adoRepoId);
+        if (!proj?.adoProject || !proj?.adoRepoId) throw new Error('adoProject and repoId required (or configure at least one project with adoProject + adoRepoId)');
+        const base = `${orgUrl}/${encodeURIComponent(proj.adoProject)}/_apis/git/repositories/${encodeURIComponent(proj.adoRepoId)}`;
+        const thread = await adoFetch(`${base}/pullRequests/${prId}/threads?api-version=7.1`, {
+          method: 'POST',
+          body: JSON.stringify({
+            comments: [{ parentCommentId: 0, content, commentType: 1 }],
+            status: 1,
+          }),
+        });
+        const comment = (thread.comments as Record<string, unknown>[])?.[0];
+        return ok({ threadId: thread.id, commentId: comment?.id, content });
+      }
+
+      case 'ado_vote_pr': {
+        const VOTE_MAP: Record<string, number> = { approve: 10, 'approve-with-suggestions': 5, reset: 0, wait: -5, reject: -10 };
+        const { prId, vote, adoProject: adoProjArg, repoId: repoIdArg } = args as { prId: number; vote: string; adoProject?: string; repoId?: string };
+        const voteValue = VOTE_MAP[vote];
+        if (voteValue === undefined) throw new Error(`Invalid vote "${vote}". Use: approve, approve-with-suggestions, reject, wait, reset.`);
+        const { orgUrl, auth } = adoCtx();
+        const cfg = readConfig();
+        const proj = cfg.projects.find((p) => p.adoProject && p.adoRepoId &&
+          (!adoProjArg || p.adoProject === adoProjArg) && (!repoIdArg || p.adoRepoId === repoIdArg)
+        ) ?? cfg.projects.find((p) => p.adoProject && p.adoRepoId);
+        if (!proj?.adoProject || !proj?.adoRepoId) throw new Error('adoProject and repoId required');
+        // Resolve current user identity
+        const connRes = await fetch(`${orgUrl}/_apis/connectionData`, {
+          headers: { Authorization: `Basic ${auth}`, Accept: 'application/json' },
+        });
+        if (!connRes.ok) throw new Error(`Could not fetch ADO identity: ${connRes.status}`);
+        const connData = await connRes.json() as { authenticatedUser?: { id?: string } };
+        const userId = connData.authenticatedUser?.id;
+        if (!userId) throw new Error('Could not determine current ADO user identity');
+        const base = `${orgUrl}/${encodeURIComponent(proj.adoProject)}/_apis/git/repositories/${encodeURIComponent(proj.adoRepoId)}`;
+        await adoFetch(`${base}/pullRequests/${prId}/reviewers/${userId}?api-version=7.1`, {
+          method: 'PUT',
+          body: JSON.stringify({ vote: voteValue }),
+        });
+        return ok({ prId, vote, voteValue, userId });
       }
 
       case 'ado_link_pr_to_jira': {

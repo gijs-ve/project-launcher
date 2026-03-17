@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-03-17T09:36:48.865Z",
+  "savedAt": "2026-03-17T11:39:13.537Z",
   "issues": [
     {
       "key": "AS-12",
@@ -218,12 +218,12 @@
       "project": "SLOONT"
     },
     {
-      "key": "SNDEV-99",
-      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
-      "status": "Ready for Test",
-      "assignee": "Sebastiaan Steenbrink",
+      "key": "SNDEV-28",
+      "summary": "(FE) Nieuwsbericht overzicht opzetten",
+      "status": "In Progress",
+      "assignee": "Unassigned",
       "priority": "Minor",
-      "type": "Task",
+      "type": "Story",
       "project": "SNDEV"
     },
     {
@@ -233,6 +233,15 @@
       "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
       "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-99",
+      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Task",
       "project": "SNDEV"
     },
     {
@@ -330,18 +339,18 @@
     "AS": 4,
     "SLODEV": 17,
     "SLOONT": 3,
-    "SNDEV": 12
+    "SNDEV": 13
   },
   "statsByStatus": {
     "Ready for Test": 17,
     "To Do": 10,
-    "In Progress": 8,
+    "In Progress": 9,
     "Ready for Refinement": 1
   },
   "statsByAssignee": {
-    "Unassigned": 24,
+    "Unassigned": 25,
     "Sjoerd de Wildt": 4,
-    "Sebastiaan Steenbrink": 1,
-    "Gijsbert van Everdingen": 7
+    "Gijsbert van Everdingen": 7,
+    "Sebastiaan Steenbrink": 1
   }
 }
