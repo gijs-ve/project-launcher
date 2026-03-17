@@ -104,6 +104,14 @@ export function HoursView() {
   const [deletingId, setDeletingId]   = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // Edit
+  const [editingId, setEditingId]             = useState<number | null>(null);
+  const [editTimeSeconds, setEditTimeSeconds] = useState(3600);
+  const [editDate, setEditDate]               = useState('');
+  const [editDesc, setEditDesc]               = useState('');
+  const [editSaving, setEditSaving]           = useState(false);
+  const [editError, setEditError]             = useState<string | null>(null);
+
   // View mode
   const [summarized, setSummarized] = useState(false);
 
@@ -245,6 +253,45 @@ export function HoursView() {
       setDeleteError(String(err));
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const startEdit = (w: TempoWorklog) => {
+    setEditingId(w.tempoWorklogId);
+    setEditTimeSeconds(w.timeSpentSeconds);
+    setEditDate(w.startDate);
+    setEditDesc(w.description ?? '');
+    setEditError(null);
+  };
+
+  const handleEditSave = async (w: TempoWorklog) => {
+    setEditError(null);
+    if (editTimeSeconds < 60) { setEditError('Select at least 1 minute'); return; }
+    if (!currentUserAccountId) { setEditError('Jira account not found — check General Settings'); return; }
+    setEditSaving(true);
+    try {
+      const r = await fetch(`/api/tempo/worklogs/${w.tempoWorklogId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          issueId:          w.issueId,
+          authorAccountId:  currentUserAccountId,
+          timeSpentSeconds: editTimeSeconds,
+          startDate:        editDate,
+          description:      editDesc.trim() || (config.tempo?.defaultDescription ?? ''),
+        }),
+      });
+      if (!r.ok) {
+        let msg = `HTTP ${r.status}`;
+        try { msg = ((await r.json()) as { error?: string }).error ?? msg; } catch {}
+        throw new Error(msg);
+      }
+      setEditingId(null);
+      fetchWorklogs();
+    } catch (err) {
+      setEditError(String(err));
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -564,7 +611,37 @@ export function HoursView() {
 
               {/* Entry rows */}
               <div className="flex flex-col gap-1.5">
-                {sorted.map((w) => (
+                {sorted.map((w) => {
+                  if (editingId === w.tempoWorklogId) {
+                    return (
+                      <div key={w.tempoWorklogId} className="flex flex-col gap-2 bg-zinc-900 border border-blue-800 rounded-lg px-3 py-3">
+                        <div className="flex flex-col gap-1">
+                          <div className="text-center font-mono text-2xl font-bold text-zinc-100">
+                            {editTimeSeconds < 60 ? <span className="text-zinc-600">0m</span> : formatDuration(editTimeSeconds)}
+                          </div>
+                          <div className="grid grid-cols-4 gap-1.5">
+                            {([[-3600, '−1h'], [-900, '−15m'], [900, '+15m'], [3600, '+1h']] as const).map(([delta, label]) => (
+                              <button key={label} onClick={() => setEditTimeSeconds((t) => Math.max(0, t + delta))} className="btn-secondary text-xs py-1.5">{label}</button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="font-mono text-xs text-zinc-500 w-16 shrink-0">Date</label>
+                          <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="input flex-1" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="font-mono text-xs text-zinc-500 w-16 shrink-0">Note</label>
+                          <input type="text" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} placeholder={config.tempo?.defaultDescription ?? 'Description…'} className="input flex-1" />
+                        </div>
+                        {editError && <p className="font-mono text-xs text-red-400">{editError}</p>}
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleEditSave(w)} disabled={editSaving || editTimeSeconds < 60} className="btn-primary text-xs px-3 py-1.5">{editSaving ? 'Saving…' : 'Save'}</button>
+                          <button onClick={() => setEditingId(null)} disabled={editSaving} className="btn-secondary text-xs px-3 py-1.5">Cancel</button>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
                   <div
                     key={w.tempoWorklogId}
                     className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2"
@@ -599,19 +676,29 @@ export function HoursView() {
                       />
                     </span>
 
-                    {/* Delete — only for own entries */}
+                    {/* Edit / Delete — only for own entries */}
                     {w.author.accountId === currentUserAccountId && (
-                      <button
-                        onClick={() => handleDelete(w.tempoWorklogId)}
-                        disabled={deletingId === w.tempoWorklogId}
-                        className="btn-danger px-2 py-0.5 text-xs shrink-0"
-                        title="Delete worklog"
-                      >
-                        {deletingId === w.tempoWorklogId ? '…' : '×'}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => startEdit(w)}
+                          className="btn-secondary px-2 py-0.5 text-xs shrink-0"
+                          title="Edit worklog"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(w.tempoWorklogId)}
+                          disabled={deletingId === w.tempoWorklogId}
+                          className="btn-danger px-2 py-0.5 text-xs shrink-0"
+                          title="Delete worklog"
+                        >
+                          {deletingId === w.tempoWorklogId ? '…' : '×'}
+                        </button>
+                      </>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           );
