@@ -7,7 +7,7 @@ import {
   useCallback,
   ReactNode,
 } from 'react';
-import { Config, Project, Link } from '../types';
+import { Config, Project, Link, Category } from '../types';
 
 interface ConfigContextValue {
   config: Config;
@@ -21,6 +21,10 @@ interface ConfigContextValue {
   saveLink: (link: Link) => Promise<void>;
   /** Convenience: remove a link */
   deleteLink: (id: string) => Promise<void>;
+  /** Convenience: upsert a category */
+  saveCategory: (category: Category) => Promise<void>;
+  /** Convenience: remove a category and clear it from projects */
+  deleteCategory: (id: string) => Promise<void>;
   loading: boolean;
   error: string | null;
 }
@@ -117,9 +121,33 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     [config, saveConfig],
   );
 
+  const saveCategory = useCallback(
+    async (category: Category) => {
+      const existing = (config.categories ?? []).find((c) => c.id === category.id);
+      const categories = existing
+        ? (config.categories ?? []).map((c) => (c.id === category.id ? category : c))
+        : [...(config.categories ?? []), category];
+      await saveConfig({ ...config, categories });
+    },
+    [config, saveConfig],
+  );
+
+  const deleteCategory = useCallback(
+    async (id: string) => {
+      await saveConfig({
+        ...config,
+        categories: (config.categories ?? []).filter((c) => c.id !== id),
+        projects: config.projects.map((p) =>
+          p.categoryId === id ? { ...p, categoryId: undefined } : p,
+        ),
+      });
+    },
+    [config, saveConfig],
+  );
+
   return (
     <ConfigContext.Provider
-      value={{ config, saveConfig, saveProject, deleteProject, saveLink, deleteLink, loading, error }}
+      value={{ config, saveConfig, saveProject, deleteProject, saveLink, deleteLink, saveCategory, deleteCategory, loading, error }}
     >
       {children}
     </ConfigContext.Provider>

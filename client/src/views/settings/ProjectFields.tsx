@@ -2,7 +2,7 @@
  * Pure field editor for a project — no save/cancel buttons.
  * The parent owns the draft state and decides when to persist.
  */
-import { Project, ProjectLink } from '../../types';
+import { Project, ProjectLink, Category } from '../../types';
 
 export interface ProjectDraft {
   name: string;
@@ -10,6 +10,7 @@ export interface ProjectDraft {
   command: string;
   url: string;
   color: string;
+  categoryId: string;
   links: ProjectLink[];
   jiraProjectKeys: string; // comma-separated, e.g. "API, WEB"
   jiraBoardUrl: string;
@@ -25,6 +26,7 @@ export function projectToDraft(p: Project): ProjectDraft {
     command: p.command,
     url: p.url ?? '',
     color: p.color,
+    categoryId: p.categoryId ?? '',
     links: p.links ? p.links.map((l) => ({ ...l })) : [],
     jiraProjectKeys: (p.jiraProjectKeys ?? []).join(', '),
     jiraBoardUrl: p.jiraBoardUrl ?? '',
@@ -38,6 +40,7 @@ export function isDraftDirty(draft: ProjectDraft, original: Project): boolean {
     draft.command        !== original.command            ||
     draft.url            !== (original.url ?? '')        ||
     draft.color          !== original.color              ||
+    draft.categoryId     !== (original.categoryId ?? '') ||
     draft.jiraProjectKeys !== (original.jiraProjectKeys ?? []).join(', ')     ||
     draft.jiraBoardUrl    !== (original.jiraBoardUrl ?? '')
   ) return true;
@@ -51,9 +54,10 @@ export function isDraftDirty(draft: ProjectDraft, original: Project): boolean {
 interface ProjectFieldsProps {
   draft: ProjectDraft;
   onChange: (patch: Partial<ProjectDraft>) => void;
+  categories: Category[];
 }
 
-export function ProjectFields({ draft, onChange }: ProjectFieldsProps) {
+export function ProjectFields({ draft, onChange, categories }: ProjectFieldsProps) {
   const updateLink = (i: number, patch: Partial<ProjectLink>) =>
     onChange({
       links: draft.links.map((l, idx) => (idx === i ? { ...l, ...patch } : l)),
@@ -110,6 +114,20 @@ export function ProjectFields({ draft, onChange }: ProjectFieldsProps) {
           <span className="font-mono text-xs text-zinc-400">{draft.color}</span>
         </div>
       </Field>
+      {categories.length > 0 && (
+        <Field label="Category">
+          <select
+            className="input"
+            value={draft.categoryId}
+            onChange={(e) => onChange({ categoryId: e.target.value })}
+          >
+            <option value="">No category</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </Field>
+      )}
 
       {/* Jira */}
       <div className="flex flex-col gap-2 border border-zinc-800 rounded-md p-3 bg-zinc-950">

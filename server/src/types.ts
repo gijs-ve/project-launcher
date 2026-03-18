@@ -8,6 +8,12 @@ export interface ProjectLink {
   openMode: 'browser' | 'webview';
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -23,6 +29,8 @@ export interface Project {
   adoProject?: string;
   /** ADO git repository name or ID */
   adoRepoId?: string;
+  /** Optional category this project belongs to */
+  categoryId?: string;
 }
 
 export interface Link {
@@ -56,6 +64,7 @@ export interface TempoConfig {
 export interface Config {
   projects: Project[];
   links: Link[];
+  categories?: Category[];
   codeEditor?: string;
   jira?: JiraCredentials;
   tempo?: TempoConfig;

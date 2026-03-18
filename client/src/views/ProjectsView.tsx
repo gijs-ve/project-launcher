@@ -5,6 +5,7 @@ import { useView } from '../context/ViewContext';
 import { useShortcuts } from '../context/ShortcutsContext';
 import { ProjectCard } from '../components/ProjectCard';
 import { LogPanel } from '../components/LogPanel';
+import { CategorySection } from '../components/CategorySection';
 
 export function ProjectsView() {
   const { config, loading } = useConfig();
@@ -38,19 +39,42 @@ export function ProjectsView() {
 
   const openLogProject = config.projects.find((p) => p.id === openLogId);
 
-  // Split projects into active (running/starting) and inactive (stopped/errored)
-  const activeProjects   = config.projects.filter((p) => {
+  const activeProjects = config.projects.filter((p) => {
     const s = statuses[p.id] ?? 'stopped';
     return s === 'running' || s === 'starting';
   });
-  const inactiveProjects = config.projects.filter((p) => {
-    const s = statuses[p.id] ?? 'stopped';
-    return s !== 'running' && s !== 'starting';
-  });
+
+  const categories = config.categories ?? [];
+  const hasCategories = categories.length > 0;
+  const validCategoryIds = new Set(categories.map((c) => c.id));
+
+  // Projects with no categoryId or a stale/unknown categoryId — always shown flat at the top
+  const uncategorized = config.projects.filter(
+    (p) => !p.categoryId || !validCategoryIds.has(p.categoryId),
+  );
+
+  const renderCard = (project: (typeof config.projects)[0]) => {
+    const idx = config.projects.indexOf(project);
+    const status = statuses[project.id] ?? 'stopped';
+    const isActive = status === 'running' || status === 'starting';
+    return (
+      <ProjectCard
+        key={project.id}
+        project={project}
+        index={idx}
+        status={status}
+        compact={isActive}
+        isLogOpen={openLogId === project.id}
+        onToggleLogs={() =>
+          setOpenLogId((prev) => (prev === project.id ? null : project.id))
+        }
+        onNavigate={() => navigateToProject(project.id)}
+      />
+    );
+  };
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* Project grid */}
       <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-8">
         {config.projects.length === 0 ? (
           <p className="font-mono text-zinc-500 text-sm">
@@ -58,28 +82,29 @@ export function ProjectsView() {
           </p>
         ) : (
           <>
-            {/* ── All projects — inactive ones full, active ones compact ── */}
-            <div className="flex flex-wrap gap-4">
-              {config.projects.map((project) => {
-                const idx    = config.projects.indexOf(project);
-                const status = statuses[project.id] ?? 'stopped';
-                const isActive = status === 'running' || status === 'starting';
+            {/* ── Uncategorized projects — always flat at the top, never collapsible ── */}
+            {(!hasCategories || uncategorized.length > 0) && (
+              <div className="flex flex-wrap gap-4">
+                {(hasCategories ? uncategorized : config.projects).map(renderCard)}
+              </div>
+            )}
+
+            {/* ── Category groups — each collapsible ── */}
+            {hasCategories &&
+              categories.map((category) => {
+                const projects = config.projects.filter((p) => p.categoryId === category.id);
+                if (projects.length === 0) return null;
                 return (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    index={idx}
-                    status={status}
-                    compact={isActive}
-                    isLogOpen={openLogId === project.id}
-                    onToggleLogs={() =>
-                      setOpenLogId((prev) => (prev === project.id ? null : project.id))
-                    }
-                    onNavigate={() => navigateToProject(project.id)}
-                  />
+                  <CategorySection
+                    key={category.id}
+                    name={category.name}
+                    color={category.color ?? '#6366f1'}
+                    projectCount={projects.length}
+                  >
+                    {projects.map(renderCard)}
+                  </CategorySection>
                 );
               })}
-            </div>
 
             {/* ── Running projects — full cards with all options ── */}
             {activeProjects.length > 0 && (
@@ -87,7 +112,7 @@ export function ProjectsView() {
                 <p className="font-mono text-xs text-zinc-500 uppercase tracking-widest">Running</p>
                 <div className="flex flex-wrap gap-4">
                   {activeProjects.map((project) => {
-                    const idx    = config.projects.indexOf(project);
+                    const idx = config.projects.indexOf(project);
                     const status = statuses[project.id] ?? 'stopped';
                     return (
                       <ProjectCard
