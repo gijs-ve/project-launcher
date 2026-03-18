@@ -1,15 +1,6 @@
 {
-  "savedAt": "2026-03-17T11:39:13.537Z",
+  "savedAt": "2026-03-18T08:33:56.962Z",
   "issues": [
-    {
-      "key": "AS-12",
-      "summary": "Umbraco preview mode voor vacatures",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Major",
-      "type": "Story",
-      "project": "AS"
-    },
     {
       "key": "AS-47",
       "summary": "Thuishotel.nl landen op Mijnantonius.nl/Thuishotel",
@@ -38,45 +29,18 @@
       "project": "AS"
     },
     {
-      "key": "SLODEV-326",
-      "summary": "Aanpassen 'pillen' op leergebiedpagina's",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Major",
-      "type": "Task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-378",
-      "summary": "Feedback: Inhoud downloadoverzicht klopt niet",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-374",
-      "summary": "WCAG bevindingen ",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-376",
-      "summary": "Karakteristiek: Popup uitbreiden met accordion functie",
-      "status": "Ready for Test",
+      "key": "HWB-150",
+      "summary": "Toegankelijkheidsicoon en animatieknop toevoegen in footer",
+      "status": "Ready for Refinement",
       "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Story",
-      "project": "SLODEV"
+      "project": "HWB"
     },
     {
-      "key": "SLODEV-377",
-      "summary": "Feedback sprint #1",
-      "status": "To Do",
+      "key": "SLODEV-399",
+      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
+      "status": "In Progress",
       "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Task",
@@ -92,12 +56,21 @@
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-384",
-      "summary": "Call to action blok uitbreiden met shared content optie",
-      "status": "To Do",
+      "key": "SLODEV-376",
+      "summary": "Karakteristiek: Popup uitbreiden met accordion functie",
+      "status": "Ready for Test",
       "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Story",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-374",
+      "summary": "WCAG bevindingen ",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
       "project": "SLODEV"
     },
     {
@@ -110,125 +83,8 @@
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-390",
-      "summary": "Feedback Leerlijnen",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-399",
-      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
-      "status": "In Progress",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-381",
-      "summary": "Leergebied pagina's zijn niet vindbaar in zoekpagina",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-394",
-      "summary": "Links naar mediabak werken niet",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-387",
-      "summary": "Extern link icoon is heel groot",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-392",
-      "summary": "De balk bovenin waar de groepen staan klopt nog niet conform het design",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-391",
-      "summary": "Wanneer je in de back-end geen popup inhoud bij 'voorbeelden' invult blijft de 'link hier' staan. ",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-382",
-      "summary": "Nieuws en inspiratie component ook per leergebied tonen",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-380",
-      "summary": "Anchors in RTE toevoegen",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLOONT-13",
-      "summary": "Afbeelding voor bedankt formulier niet verplicht maken",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "SLOONT"
-    },
-    {
-      "key": "SLOONT-11",
-      "summary": "Feedback formulieren",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Task",
-      "project": "SLOONT"
-    },
-    {
-      "key": "SLOONT-12",
-      "summary": "Toegang tot formulieren goed instellen",
-      "status": "Ready for Refinement",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "SLOONT"
-    },
-    {
-      "key": "SNDEV-28",
-      "summary": "(FE) Nieuwsbericht overzicht opzetten",
-      "status": "In Progress",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-30",
-      "summary": "(FE) Homepage opzetten",
+      "key": "SNDEV-24",
+      "summary": "(FE) Hero opzetten",
       "status": "In Progress",
       "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
@@ -236,17 +92,35 @@
       "project": "SNDEV"
     },
     {
-      "key": "SNDEV-99",
-      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
-      "status": "Ready for Test",
-      "assignee": "Sebastiaan Steenbrink",
+      "key": "SNDEV-28",
+      "summary": "(FE) Nieuwsbericht overzicht opzetten",
+      "status": "In Review",
+      "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
-      "type": "Task",
+      "type": "Story",
       "project": "SNDEV"
     },
     {
-      "key": "SNDEV-13",
-      "summary": "(FE) Footer opzetten",
+      "key": "SNDEV-25",
+      "summary": "(FE) Kruimelpad toevoegen",
+      "status": "In Review",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-23",
+      "summary": "(FE) Inline button",
+      "status": "In Review",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-17",
+      "summary": "(FE) Accordeon element",
       "status": "Ready for Test",
       "assignee": "Sjoerd de Wildt",
       "priority": "Minor",
@@ -263,28 +137,10 @@
       "project": "SNDEV"
     },
     {
-      "key": "SNDEV-17",
-      "summary": "(FE) Accordeon element",
+      "key": "SNDEV-13",
+      "summary": "(FE) Footer opzetten",
       "status": "Ready for Test",
       "assignee": "Sjoerd de Wildt",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-19",
-      "summary": "Zoekpagina opzetten",
-      "status": "Ready for Test",
-      "assignee": "Sjoerd de Wildt",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-21",
-      "summary": "(FE) RTE styling",
-      "status": "In Progress",
-      "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
       "type": "Story",
       "project": "SNDEV"
@@ -299,8 +155,8 @@
       "project": "SNDEV"
     },
     {
-      "key": "SNDEV-23",
-      "summary": "(FE) Inline button",
+      "key": "SNDEV-21",
+      "summary": "(FE) RTE styling",
       "status": "In Progress",
       "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
@@ -308,17 +164,17 @@
       "project": "SNDEV"
     },
     {
-      "key": "SNDEV-24",
-      "summary": "(FE) Hero opzetten",
-      "status": "In Progress",
-      "assignee": "Gijsbert van Everdingen",
+      "key": "SNDEV-99",
+      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
       "priority": "Minor",
-      "type": "Story",
+      "type": "Task",
       "project": "SNDEV"
     },
     {
-      "key": "SNDEV-25",
-      "summary": "(FE) Kruimelpad toevoegen",
+      "key": "SNDEV-30",
+      "summary": "(FE) Homepage opzetten",
       "status": "In Progress",
       "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
@@ -333,24 +189,61 @@
       "priority": "Minor",
       "type": "Story",
       "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-19",
+      "summary": "Zoekpagina opzetten",
+      "status": "Ready for Test",
+      "assignee": "Sjoerd de Wildt",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-26",
+      "summary": "(FE) Portalpagina opzetten",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-29",
+      "summary": "(FE) Nieuwsbericht detailpagina",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-31",
+      "summary": "(FE) Landingspagina opzetten",
+      "status": "Ready for Refinement",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
     }
   ],
   "statsByProject": {
-    "AS": 4,
-    "SLODEV": 17,
-    "SLOONT": 3,
-    "SNDEV": 13
+    "AS": 3,
+    "HWB": 1,
+    "SLODEV": 5,
+    "SNDEV": 16
   },
   "statsByStatus": {
-    "Ready for Test": 17,
-    "To Do": 10,
-    "In Progress": 9,
-    "Ready for Refinement": 1
+    "Ready for Test": 10,
+    "To Do": 4,
+    "Ready for Refinement": 2,
+    "In Progress": 6,
+    "In Review": 3
   },
   "statsByAssignee": {
-    "Unassigned": 25,
+    "Unassigned": 12,
     "Sjoerd de Wildt": 4,
-    "Gijsbert van Everdingen": 7,
+    "Gijsbert van Everdingen": 8,
     "Sebastiaan Steenbrink": 1
   }
 }
