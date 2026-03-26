@@ -165,7 +165,7 @@ export function ProjectsSettings() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+    <div className="flex-1 p-6 flex flex-col gap-6">
       <SettingsHeader
         title="Projects"
         description="Manage the projects that appear in your Projects view."

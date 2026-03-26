@@ -806,6 +806,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: 'ado_reply_pr_comment',
+      description: 'Reply to an existing comment thread on an ADO pull request.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          prId: { type: 'number', description: 'Pull request ID.' },
+          threadId: { type: 'number', description: 'Thread ID to reply to (from ado_get_pr comment threads).' },
+          content: { type: 'string', description: 'Reply text (plain text / Markdown).' },
+          adoProject: { type: 'string', description: 'ADO project name. Uses first configured adoProject if omitted.' },
+          repoId: { type: 'string', description: 'Repository name or ID. Uses first configured adoRepoId if omitted.' },
+        },
+        required: ['prId', 'threadId', 'content'],
+      },
+    },
+    {
       name: 'ado_vote_pr',
       description: 'Cast a vote on an ADO pull request as the authenticated user (the owner of the PAT token).',
       inputSchema: {
@@ -1747,12 +1762,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         // Helper: summarise a list of raw Tempo worklog results into per-person stats
-        const summariseByAuthor = (raw: Record<string, unknown>[]) => {
+        const summariseByAuthor = (raw: Record<string, unknown>[], nameOverrides?: Record<string, string>) => {
           const byAuthor: Record<string, { displayName: string; secs: number; days: Set<string> }> = {};
           for (const wl of raw) {
             const authorObj = wl.author as Record<string, unknown>;
             const id = authorObj?.accountId as string ?? 'unknown';
-            const name = authorObj?.displayName as string ?? id;
+            const name = nameOverrides?.[id] ?? authorObj?.displayName as string ?? id;
             if (!byAuthor[id]) byAuthor[id] = { displayName: name, secs: 0, days: new Set() };
             const secs = (wl.timeSpentSeconds as number) ?? 0;
             byAuthor[id].secs += secs;
@@ -1768,14 +1783,42 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
 
         if (teamId != null) {
-          // Preferred path: fetch all worklogs for a team at once
+          // Fetch team members, then fetch worklogs per member
+          const membersRes = await fetch(
+            `https://api.tempo.io/4/teams/${teamId}/members`,
+            { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } },
+          );
+          if (!membersRes.ok) throw new Error(`Tempo ${membersRes.status}: ${(await membersRes.text()).slice(0, 200)}`);
+          const membersData = await membersRes.json() as { results?: { member?: { accountId?: string }; accountId?: string }[] };
+          const memberIds = (membersData.results ?? [])
+            .map((m) => m.member?.accountId ?? m.accountId)
+            .filter((id): id is string => !!id);
+          const memberSet = new Set(memberIds);
+
+          // Fetch all visible worklogs in one call, then filter to team members.
+          // Personal Tempo tokens ignore authorAccountId/teamId filters.
           const res = await fetch(
-            `https://api.tempo.io/4/worklogs?teamId=${teamId}&from=${from}&to=${to}&limit=1000`,
+            `https://api.tempo.io/4/worklogs?from=${from}&to=${to}&limit=1000`,
             { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } },
           );
           if (!res.ok) throw new Error(`Tempo ${res.status}: ${(await res.text()).slice(0, 200)}`);
           const data = await res.json() as { results?: Record<string, unknown>[] };
-          return ok({ from, to, teamId, members: summariseByAuthor(data.results ?? []) });
+          const teamWorklogs = (data.results ?? []).filter(
+            (w) => memberSet.has((w.author as Record<string, unknown>)?.accountId as string),
+          );
+
+          // Resolve display names from Jira for visible authors
+          const nameMap: Record<string, string> = {};
+          const authorIds = [...new Set(teamWorklogs.map((w) => (w.author as Record<string, unknown>)?.accountId as string).filter(Boolean))];
+          await Promise.all(
+            authorIds.map(async (id) => {
+              try {
+                const user = await jiraFetch(`/rest/api/3/user?accountId=${encodeURIComponent(id)}`);
+                if (user.displayName) nameMap[id] = user.displayName as string;
+              } catch { /* skip */ }
+            }),
+          );
+          return ok({ from, to, teamId, members: summariseByAuthor(teamWorklogs, nameMap) });
         }
 
         // Fallback: per-person queries using authorAccountId
@@ -2003,6 +2046,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         });
         const comment = (thread.comments as Record<string, unknown>[])?.[0];
         return ok({ threadId: thread.id, commentId: comment?.id, content });
+      }
+
+      case 'ado_reply_pr_comment': {
+        const { prId, threadId, content, adoProject: adoProjArg, repoId: repoIdArg } = args as { prId: number; threadId: number; content: string; adoProject?: string; repoId?: string };
+        const { orgUrl } = adoCtx();
+        const cfg = readConfig();
+        const proj = cfg.projects.find((p) => p.adoProject && p.adoRepoId &&
+          (!adoProjArg || p.adoProject === adoProjArg) && (!repoIdArg || p.adoRepoId === repoIdArg)
+        ) ?? cfg.projects.find((p) => p.adoProject && p.adoRepoId);
+        if (!proj?.adoProject || !proj?.adoRepoId) throw new Error('adoProject and repoId required (or configure at least one project with adoProject + adoRepoId)');
+        const base = `${orgUrl}/${encodeURIComponent(proj.adoProject)}/_apis/git/repositories/${encodeURIComponent(proj.adoRepoId)}`;
+        const comment = await adoFetch(`${base}/pullRequests/${prId}/threads/${threadId}/comments?api-version=7.1`, {
+          method: 'POST',
+          body: JSON.stringify({ content, commentType: 1 }),
+        });
+        return ok({ threadId, commentId: comment.id, content });
       }
 
       case 'ado_vote_pr': {

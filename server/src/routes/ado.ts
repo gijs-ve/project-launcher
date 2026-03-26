@@ -206,4 +206,33 @@ router.post('/prs/:prId/vote', async (req: Request, res: Response) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// POST /api/ado/prs/:prId/threads/:threadId/reply
+//
+// Reply to an existing comment thread on an ADO pull request.
+//
+// Body: { content: string, adoProject?: string, repoId?: string }
+// ---------------------------------------------------------------------------
+router.post('/prs/:prId/threads/:threadId/reply', async (req: Request, res: Response) => {
+  try {
+    const prId = Number(req.params.prId);
+    const threadId = Number(req.params.threadId);
+    const { content, adoProject, repoId } = req.body as { content: string; adoProject?: string; repoId?: string };
+    if (!content?.trim()) { res.status(400).json({ error: '"content" is required.' }); return; }
+
+    const ctx = resolveAdoContext();
+    const r = resolveRepo(ctx, adoProject, repoId);
+    if ('error' in r) { res.status(400).json({ error: r.error }); return; }
+
+    const url = `${r.orgUrl}/${encodeURIComponent(r.adoProject)}/_apis/git/repositories/${encodeURIComponent(r.repoId)}/pullRequests/${prId}/threads/${threadId}/comments?api-version=7.1`;
+    const comment = await adoFetch(r.orgUrl, r.auth, url, {
+      method: 'POST',
+      body: JSON.stringify({ content, commentType: 1 }),
+    });
+    res.json({ threadId, commentId: comment.id, content });
+  } catch (err) {
+    res.status(502).json({ error: `ADO proxy error: ${String(err)}` });
+  }
+});
+
 export default router;

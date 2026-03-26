@@ -431,6 +431,7 @@ router.get('/my-teams', async (req: Request, res: Response) => {
 
 // GET /api/tempo/team-worklogs?teamId=123&from=YYYY-MM-DD&to=YYYY-MM-DD
 // Returns all Tempo worklogs for a given team in the given date range.
+// Works by fetching team members first, then fetching worklogs per member.
 router.get('/team-worklogs', async (req: Request, res: Response) => {
   try {
     const { teamId, from, to } = req.query as { teamId?: string; from?: string; to?: string };
@@ -448,36 +449,87 @@ router.get('/team-worklogs', async (req: Request, res: Response) => {
     const ctx = resolveTempoToken();
     if ('error' in ctx) { res.status(400).json({ error: ctx.error }); return; }
 
+    const headers = { Authorization: `Bearer ${ctx.token}`, Accept: 'application/json' };
+
+    // Step 1: Fetch team members
+    const membersResp = await fetch(`${TEMPO_BASE}/teams/${teamId}/members`, { headers });
+    if (!membersResp.ok) {
+      const text = await membersResp.text();
+      res.status(membersResp.status).json({ error: `TEMPO API error ${membersResp.status}: ${text.slice(0, 300)}` }); return;
+    }
+    const membersData = await membersResp.json() as { results?: { member?: { accountId?: string }; accountId?: string }[] };
+    const memberAccountIds = (membersData.results ?? [])
+      .map((m) => m.member?.accountId ?? m.accountId)
+      .filter((id): id is string => !!id);
+
+    if (memberAccountIds.length === 0) {
+      res.json({ results: [] }); return;
+    }
+
+    const nameMap: Record<string, string> = {};
+    const config2 = readConfig();
+    const creds2 = config2.jira;
+    const jiraBase = creds2?.baseUrl?.replace(/\/+$/, '');
+    const jiraAuth = creds2?.email && creds2?.apiToken
+      ? Buffer.from(`${creds2.email}:${creds2.apiToken}`).toString('base64')
+      : null;
+
+    const memberSet = new Set(memberAccountIds);
+
+    // Fetch all visible worklogs in one call, then filter to team members.
+    // The Tempo personal token only returns worklogs the user can see;
+    // authorAccountId/teamId filters are ignored. So we fetch once and
+    // filter client-side by team membership.
     const params = new URLSearchParams();
-    params.set('teamId', teamId);
     params.set('limit', '1000');
     if (from) params.set('from', from);
     if (to)   params.set('to', to);
 
-    const response = await fetch(`${TEMPO_BASE}/worklogs?${params}`, {
-      headers: { Authorization: `Bearer ${ctx.token}`, Accept: 'application/json' },
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      res.status(response.status).json({ error: `TEMPO API error ${response.status}: ${text.slice(0, 300)}` }); return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let allWorklogs: any[] = [];
+    const response = await fetch(`${TEMPO_BASE}/worklogs?${params}`, { headers });
+    if (response.ok) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = await response.json() as { results?: any[] };
+      // Keep only worklogs authored by a team member
+      allWorklogs = (data.results ?? []).filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (w: any) => memberSet.has(w.author?.accountId),
+      );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = await response.json() as { results?: any[] };
-    const results = (data.results ?? []).map((w) => ({
+    // Resolve display names from Jira in parallel
+    if (jiraBase && jiraAuth) {
+      // Only look up authors that appear in the filtered worklogs
+      const authorIds = [...new Set(allWorklogs.map((w: any) => w.author?.accountId as string).filter(Boolean))];
+      await Promise.all(
+        authorIds.map(async (accountId) => {
+          try {
+            const r = await fetch(`${jiraBase}/rest/api/3/user?accountId=${encodeURIComponent(accountId)}`, {
+              headers: { Authorization: `Basic ${jiraAuth}`, Accept: 'application/json' },
+            });
+            if (!r.ok) return;
+            const user = await r.json() as { displayName?: string };
+            if (user.displayName) nameMap[accountId] = user.displayName;
+          } catch { /* skip */ }
+        }),
+      );
+    }
+
+    const results = allWorklogs.map((w: any) => ({
       tempoWorklogId:   w.tempoWorklogId,
       issueId:          w.issue?.id  ?? w.issueId,
       issueKey:         w.issue?.key ?? undefined,
       timeSpentSeconds: w.timeSpentSeconds,
       startDate:        w.startDate,
       description:      w.description,
-      author:           w.author,
+      author: {
+        ...w.author,
+        displayName: w.author?.displayName || nameMap[w.author?.accountId] || w.author?.accountId,
+      },
     }));
 
     // Resolve missing issue keys from Jira in a single batch query
-    const config2 = readConfig();
-    const creds2 = config2.jira;
     if (creds2?.email && creds2?.apiToken && creds2?.baseUrl) {
       const base2 = creds2.baseUrl.replace(/\/+$/, '');
       const auth2 = Buffer.from(`${creds2.email}:${creds2.apiToken}`).toString('base64');

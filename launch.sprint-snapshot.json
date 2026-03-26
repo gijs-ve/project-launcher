@@ -1,146 +1,173 @@
 {
-  "savedAt": "2026-03-18T08:33:56.962Z",
+  "savedAt": "2026-03-25T08:35:41.948Z",
   "issues": [
-    {
-      "key": "AS-47",
-      "summary": "Thuishotel.nl landen op Mijnantonius.nl/Thuishotel",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Major",
-      "type": "Story",
-      "project": "AS"
-    },
     {
       "key": "AS-35",
       "summary": "Antonius - Scheduled maintenance #4",
-      "status": "To Do",
-      "assignee": "Unassigned",
+      "status": "In Progress",
+      "assignee": "Willem Pak",
       "priority": "Lowest",
       "type": "Story",
       "project": "AS"
     },
     {
-      "key": "AS-41",
-      "summary": "(FE) Antonius - Scheduled maintenance #4",
+      "key": "GMBDEV-65",
+      "summary": "Contentpagina ",
+      "status": "In Progress",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-61",
+      "summary": "(BE) Portalpagina + detailpagina opzetten",
+      "status": "In Progress",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-60",
+      "summary": "(FE) Homepage opzetten",
+      "status": "In Progress",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-106",
+      "summary": "Back-end",
+      "status": "In Progress",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-54",
+      "summary": "GMB corporate Basisopzet ",
+      "status": "In Progress",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-105",
+      "summary": "Front-end",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-70",
+      "summary": "Installeren Videoplayer package",
       "status": "To Do",
       "assignee": "Unassigned",
-      "priority": "Lowest",
+      "priority": "Minor",
       "type": "Story",
-      "project": "AS"
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-69",
+      "summary": "Installeren SEO-package",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-59",
+      "summary": "(BE) Homepage opzetten",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-63",
+      "summary": "(BE) Projecten pagina + detailpagina opzetten",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-64",
+      "summary": "(FE) Projecten pagina + detailpagina opzetten",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-66",
+      "summary": "(BE) Nieuws overzichtspagina + detailpagina",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-67",
+      "summary": "(FE) Nieuws overzichtspagina + detailpagina",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
     },
     {
       "key": "HWB-150",
       "summary": "Toegankelijkheidsicoon en animatieknop toevoegen in footer",
-      "status": "Ready for Refinement",
-      "assignee": "Unassigned",
+      "status": "To Do",
+      "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
       "type": "Story",
       "project": "HWB"
     },
     {
-      "key": "SLODEV-399",
-      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
+      "key": "SLODEV-376",
+      "summary": "Karakteristiek: Popup uitbreiden met accordion functie",
       "status": "In Progress",
       "assignee": "Unassigned",
       "priority": "Minor",
-      "type": "Task",
+      "type": "Story",
       "project": "SLODEV"
     },
     {
       "key": "SLODEV-383",
-      "summary": "Mailchimp formulier embedden via content element",
-      "status": "Ready for Test",
+      "summary": "18.3 Mailchimp formulier embedden via content element",
+      "status": "Reopened",
       "assignee": "Sjoerd de Wildt",
       "priority": "Minor",
       "type": "Story",
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-376",
-      "summary": "Karakteristiek: Popup uitbreiden met accordion functie",
+      "key": "SLODEV-390",
+      "summary": "Feedback Leerlijnen",
       "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-374",
-      "summary": "WCAG bevindingen ",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
+      "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
       "type": "Task",
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-386",
-      "summary": "Standaard link naar overzichtspagina bij FAQ component",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SNDEV-24",
-      "summary": "(FE) Hero opzetten",
-      "status": "In Progress",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-28",
-      "summary": "(FE) Nieuwsbericht overzicht opzetten",
+      "key": "SNDEV-29",
+      "summary": "(FE) Nieuwsbericht detailpagina",
       "status": "In Review",
       "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-25",
-      "summary": "(FE) Kruimelpad toevoegen",
-      "status": "In Review",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-23",
-      "summary": "(FE) Inline button",
-      "status": "In Review",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-17",
-      "summary": "(FE) Accordeon element",
-      "status": "Ready for Test",
-      "assignee": "Sjoerd de Wildt",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-14",
-      "summary": "(FE) Afbeelding & Video element",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-13",
-      "summary": "(FE) Footer opzetten",
-      "status": "Ready for Test",
-      "assignee": "Sjoerd de Wildt",
       "priority": "Minor",
       "type": "Story",
       "project": "SNDEV"
@@ -148,7 +175,7 @@
     {
       "key": "SNDEV-22",
       "summary": "(FE) Tekstrij element",
-      "status": "In Progress",
+      "status": "In Review",
       "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
       "type": "Story",
@@ -157,35 +184,62 @@
     {
       "key": "SNDEV-21",
       "summary": "(FE) RTE styling",
-      "status": "In Progress",
+      "status": "In Review",
       "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
       "type": "Story",
       "project": "SNDEV"
     },
     {
-      "key": "SNDEV-99",
-      "summary": "Umbraco updaten naar nieuwste versie (security advisory 10 maart 2026)",
+      "key": "SNDEV-24",
+      "summary": "(FE) Hero opzetten",
+      "status": "In Review",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-26",
+      "summary": "(FE) Portalpagina opzetten",
+      "status": "In Review",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-31",
+      "summary": "(FE) Landingspagina opzetten",
       "status": "Ready for Test",
       "assignee": "Sebastiaan Steenbrink",
       "priority": "Minor",
-      "type": "Task",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-13",
+      "summary": "(FE) Footer opzetten",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Story",
       "project": "SNDEV"
     },
     {
       "key": "SNDEV-30",
       "summary": "(FE) Homepage opzetten",
-      "status": "In Progress",
-      "assignee": "Gijsbert van Everdingen",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
       "priority": "Minor",
       "type": "Story",
       "project": "SNDEV"
     },
     {
-      "key": "SNDEV-27",
-      "summary": "(FE) Contentpagina opzetten",
-      "status": "In Progress",
-      "assignee": "Gijsbert van Everdingen",
+      "key": "SNDEV-28",
+      "summary": "(FE) Nieuwsbericht overzicht opzetten",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
       "priority": "Minor",
       "type": "Story",
       "project": "SNDEV"
@@ -194,56 +248,59 @@
       "key": "SNDEV-19",
       "summary": "Zoekpagina opzetten",
       "status": "Ready for Test",
-      "assignee": "Sjoerd de Wildt",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-26",
-      "summary": "(FE) Portalpagina opzetten",
-      "status": "To Do",
       "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Story",
       "project": "SNDEV"
     },
     {
-      "key": "SNDEV-29",
-      "summary": "(FE) Nieuwsbericht detailpagina",
-      "status": "To Do",
-      "assignee": "Unassigned",
+      "key": "SNDEV-17",
+      "summary": "(FE) Accordeon element",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
       "priority": "Minor",
       "type": "Story",
       "project": "SNDEV"
     },
     {
-      "key": "SNDEV-31",
-      "summary": "(FE) Landingspagina opzetten",
-      "status": "Ready for Refinement",
-      "assignee": "Unassigned",
+      "key": "SNDEV-27",
+      "summary": "(FE) Contentpagina opzetten",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
       "priority": "Minor",
       "type": "Story",
       "project": "SNDEV"
+    },
+    {
+      "key": "RVNDIP-136",
+      "summary": "Evenement van kalender kunnen dowloaden in iCal .ics en VCal .vcs formaat",
+      "status": "In Progress",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Lowest",
+      "type": "Task",
+      "project": "RVNDIP"
     }
   ],
   "statsByProject": {
-    "AS": 3,
+    "AS": 1,
+    "GMBDEV": 13,
     "HWB": 1,
-    "SLODEV": 5,
-    "SNDEV": 16
+    "SLODEV": 3,
+    "SNDEV": 12,
+    "RVNDIP": 1
   },
   "statsByStatus": {
-    "Ready for Test": 10,
-    "To Do": 4,
-    "Ready for Refinement": 2,
-    "In Progress": 6,
-    "In Review": 3
+    "In Progress": 9,
+    "To Do": 8,
+    "Reopened": 1,
+    "Ready for Test": 8,
+    "In Review": 5
   },
   "statsByAssignee": {
-    "Unassigned": 12,
-    "Sjoerd de Wildt": 4,
+    "Willem Pak": 1,
+    "Sebastiaan Steenbrink": 12,
     "Gijsbert van Everdingen": 8,
-    "Sebastiaan Steenbrink": 1
+    "Unassigned": 9,
+    "Sjoerd de Wildt": 1
   }
 }
