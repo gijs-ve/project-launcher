@@ -348,11 +348,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'jira_get_issue',
-      description: 'Fetch full details of a Jira issue including description, comments, and attachments.',
+      description:
+        'Fetch full details of one or more Jira issues including description, comments, and attachments. ' +
+        'Only use this when the user explicitly asks for full details, descriptions, comments, or attachments. ' +
+        'For listing or searching issues, use jira_search_issues instead.',
       inputSchema: {
         type: 'object',
         properties: {
-          issueKey: { type: 'string', description: 'Jira issue key, e.g. "PROJ-123".' },
+          issueKey: {
+            description: 'One or more Jira issue keys. Pass a single key like "PROJ-123" or multiple as a comma-separated string like "PROJ-123,PROJ-456".',
+            type: 'string',
+          },
         },
         required: ['issueKey'],
       },
@@ -931,8 +937,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'jira_get_issue': {
         const { issueKey } = args as { issueKey: string };
         const fields = 'summary,status,assignee,priority,issuetype,description,labels,created,updated,reporter,comment,attachment';
-        const data = await jiraFetch(`/rest/api/3/issue/${encodeURIComponent(issueKey)}?fields=${fields}`);
-        return ok({ issue: data });
+        const keys = issueKey.split(',').map((k) => k.trim()).filter(Boolean);
+        if (keys.length === 1) {
+          const data = await jiraFetch(`/rest/api/3/issue/${encodeURIComponent(keys[0])}?fields=${fields}`);
+          return ok({ issue: data });
+        }
+        const issues = await Promise.all(
+          keys.map((k) => jiraFetch(`/rest/api/3/issue/${encodeURIComponent(k)}?fields=${fields}`)),
+        );
+        return ok({ issues });
       }
 
       // ── Jira — transitions ────────────────────────────────────────────────
