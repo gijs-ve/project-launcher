@@ -49,7 +49,7 @@ interface JiraCredentials { email: string; apiToken: string; baseUrl?: string }
 interface ProjectLink { label: string; url: string; openMode?: string }
 interface Project { id: string; name: string; cwd: string; command: string; color: string; url?: string; jiraProjectKeys?: string[]; links?: ProjectLink[]; adoProject?: string; adoRepoId?: string }
 interface AdoConfig { orgUrl: string; personalAccessToken: string }
-interface Config { projects: Project[]; jira?: JiraCredentials; tempo?: { apiToken: string }; teamsWebhookUrl?: string; ado?: AdoConfig }
+interface Config { projects: Project[]; jira?: JiraCredentials; tempo?: { apiToken: string }; teamsWebhookUrl?: string; teamsWebhooks?: Record<string, string>; ado?: AdoConfig }
 
 function adoCtx() {
   const cfg = readConfig();
@@ -441,13 +441,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'teams_send_message',
-      description: 'Send a message to the configured Microsoft Teams channel via an Incoming Webhook.',
+      description: 'Send a message to a Microsoft Teams channel via a named webhook. Use "channel" to pick the target (configured in teamsWebhooks). Falls back to the default teamsWebhookUrl when omitted.',
       inputSchema: {
         type: 'object',
         properties: {
           text: { type: 'string', description: 'Message body (supports Markdown).' },
           title: { type: 'string', description: 'Optional bold title shown above the message.' },
           color: { type: 'string', description: 'Optional hex accent color, e.g. "0078D4" (blue). Defaults to Proud Lazy brand pink.' },
+          channel: { type: 'string', description: 'Named webhook key from teamsWebhooks config (e.g. "pr-share", "status"). Falls back to teamsWebhookUrl if omitted.' },
         },
         required: ['text'],
       },
@@ -681,6 +682,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: 'tempo_delete_worklog',
+      description: 'Delete an existing Tempo worklog by its tempoWorklogId. Use tempo_get_worklogs to find the worklog ID first.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          tempoWorklogId: { type: 'number', description: 'The numeric Tempo worklog ID to delete.' },
+        },
+        required: ['tempoWorklogId'],
+      },
+    },
+    {
       name: 'tempo_get_my_teams',
       description: 'List the Tempo teams the current user is a member of. Returns teamId and name. Use teamId with tempo_team_hours to get reliable team-wide worklogs.',
       inputSchema: { type: 'object', properties: {}, required: [] },
@@ -762,7 +774,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         properties: {
           projectId: { type: 'string', description: 'Proud Lazy project ID (from list_projects). Used to resolve adoProject/adoRepoId and the current git branch.' },
           title: { type: 'string', description: 'PR title. Auto-generated from branch Jira key if omitted.' },
-          description: { type: 'string', description: 'PR description body (Markdown).' },
+          description: { type: 'string', description: 'PR description body (Markdown). Also used as a brief summary in the Teams notification — keep it to 1-2 lines.' },
           targetBranch: { type: 'string', description: 'Target branch to merge into (default: "main").' },
           draft: { type: 'boolean', description: 'Mark as draft PR (default: false).' },
           workItemIds: { type: 'array', items: { type: 'number' }, description: 'ADO work item IDs to link.' },
@@ -1006,10 +1018,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // ── Teams ─────────────────────────────────────────────────────────────
 
       case 'teams_send_message': {
-        const { text, title } = args as { text: string; title?: string; color?: string };
+        const { text, title, channel } = args as { text: string; title?: string; color?: string; channel?: string };
         const cfg = readConfig();
-        const webhookUrl = cfg.teamsWebhookUrl;
-        if (!webhookUrl) throw new Error('No teamsWebhookUrl configured in launch.config.gizzyb');
+        const webhookUrl = channel
+          ? cfg.teamsWebhooks?.[channel]
+          : (cfg.teamsWebhookUrl ?? cfg.teamsWebhooks?.['default']);
+        if (!webhookUrl) {
+          const available = Object.keys(cfg.teamsWebhooks ?? {});
+          throw new Error(
+            channel
+              ? `No Teams webhook named "${channel}". Available: ${available.join(', ') || '(none)'}`
+              : 'No teamsWebhookUrl or teamsWebhooks.default configured in launch.config.gizzyb',
+          );
+        }
         const bodyBlocks: unknown[] = [];
         if (title) bodyBlocks.push({ type: 'TextBlock', size: 'Medium', weight: 'Bolder', text: title });
         bodyBlocks.push({ type: 'TextBlock', text, wrap: true });
@@ -1094,6 +1115,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         });
         if (!updateRes.ok) throw new Error(`Tempo API ${updateRes.status}: ${(await updateRes.text()).slice(0, 200)}`);
         return ok(await updateRes.json());
+      }
+
+      case 'tempo_delete_worklog': {
+        const { tempoWorklogId: deleteWorklogId } = args as { tempoWorklogId: number };
+        const deleteToken = tempoToken();
+        const deleteRes = await fetch(`https://api.tempo.io/4/worklogs/${deleteWorklogId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${deleteToken}`, Accept: 'application/json' },
+        });
+        if (!deleteRes.ok) throw new Error(`Tempo API ${deleteRes.status}: ${(await deleteRes.text()).slice(0, 200)}`);
+        return ok({ deleted: true, tempoWorklogId: deleteWorklogId });
       }
 
       // ── Standup ───────────────────────────────────────────────────────────
@@ -1991,7 +2023,43 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             { method: 'PATCH', body: JSON.stringify({ autoCompleteSetBy: prData.createdBy }) },
           ).catch(() => null);
         }
-        const prUrl = `${orgUrl}/${proj.adoProject}/_git/${proj.adoRepoId}/pullrequest/${prData.pullRequestId}`;
+        const prUrl = `${orgUrl}/${encodeURIComponent(proj.adoProject)}/_git/${encodeURIComponent(proj.adoRepoId)}/pullrequest/${prData.pullRequestId}`;
+
+        // Notify Teams pr-share channel
+        const prWebhook = cfg.teamsWebhooks?.['pr-share'];
+        if (prWebhook) {
+          const teamsBody: unknown[] = [
+            { type: 'TextBlock', size: 'Medium', weight: 'Bolder', text: `🔀 New PR: ${resolvedTitle}` },
+            { type: 'TextBlock', text: `**Project:** ${proj.name}`, wrap: true },
+            { type: 'TextBlock', text: `**Branch:** ${currentBranch} → ${targetBranch}`, wrap: true },
+          ];
+          if (description) {
+            teamsBody.push({ type: 'TextBlock', text: description, wrap: true, spacing: 'Small' });
+          }
+          teamsBody.push(
+            { type: 'TextBlock', text: '---', spacing: 'Small' },
+            { type: 'TextBlock', text: '_Vibed by Vibebert_', size: 'Small', isSubtle: true, horizontalAlignment: 'Right' },
+          );
+          fetch(prWebhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'message',
+              attachments: [{
+                contentType: 'application/vnd.microsoft.card.adaptive',
+                content: {
+                  type: 'AdaptiveCard',
+                  $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+                  version: '1.2',
+                  body: teamsBody,
+                  actions: [{ type: 'Action.OpenUrl', title: 'View Pull Request', url: prUrl }],
+                  msteams: { width: 'Full' },
+                },
+              }],
+            }),
+          }).catch((err) => console.error('[Teams] PR share webhook error:', err));
+        }
+
         return ok({ id: prData.pullRequestId, title: resolvedTitle, sourceBranch: currentBranch, targetBranch, url: prUrl, isDraft: draft });
       }
 

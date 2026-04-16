@@ -1,6 +1,42 @@
 {
-  "savedAt": "2026-04-14T07:36:50.380Z",
+  "savedAt": "2026-04-16T07:36:50.168Z",
   "issues": [
+    {
+      "key": "AS-42",
+      "summary": "(FE) Antonius - Scheduled maintenance #6",
+      "status": "In Progress",
+      "assignee": "Davey Forkin",
+      "priority": "Lowest",
+      "type": "Story",
+      "project": "AS"
+    },
+    {
+      "key": "GMBDEV-68",
+      "summary": "Zoekpagina",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-89",
+      "summary": "(FE) Tijdlijn element",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-64",
+      "summary": "(FE) Projecten pagina + detailpagina opzetten",
+      "status": "In Progress",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
     {
       "key": "GMBDEV-92",
       "summary": "Social share rij",
@@ -11,28 +47,37 @@
       "project": "GMBDEV"
     },
     {
-      "key": "GMBDEV-77",
-      "summary": "(FE) Verwijzing element (toptaken)",
+      "key": "GMBDEV-132",
+      "summary": "Build baisc api with sort / filter (hhnk)",
       "status": "In Progress",
-      "assignee": "Gijsbert van Everdingen",
+      "assignee": "Haris Hukic",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-110",
+      "summary": "BE - Koppeling Recruitee",
+      "status": "In Progress",
+      "assignee": "Haris Hukic",
       "priority": "Minor",
       "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-105",
+      "summary": "Front-end",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Sub-task",
       "project": "GMBDEV"
     },
     {
       "key": "GMBDEV-60",
       "summary": "(FE) Homepage opzetten",
-      "status": "In Review",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-85",
-      "summary": "Video element",
-      "status": "In Review",
-      "assignee": "Gijsbert van Everdingen",
+      "status": "Ready for Test",
+      "assignee": "Vladimir Bratukhin",
       "priority": "Minor",
       "type": "Story",
       "project": "GMBDEV"
@@ -47,46 +92,10 @@
       "project": "GMBDEV"
     },
     {
-      "key": "GMBDEV-81",
-      "summary": "(BE) Quote element",
-      "status": "In Review",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-64",
-      "summary": "(FE) Projecten pagina + detailpagina opzetten",
-      "status": "In Review",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
       "key": "GMBDEV-82",
       "summary": "(FE) Quote element",
       "status": "In Review",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-91",
-      "summary": "Titel-tekstrij met visual element",
-      "status": "In Review",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-67",
-      "summary": "(FE) Nieuws overzichtspagina + detailpagina",
-      "status": "In Review",
-      "assignee": "Gijsbert van Everdingen",
+      "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Story",
       "project": "GMBDEV"
@@ -94,10 +103,118 @@
     {
       "key": "GMBDEV-87",
       "summary": "(FE) Direct contact element",
-      "status": "In Progress",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-86",
+      "summary": "(BE) Direct contact element",
+      "status": "Reopened",
+      "assignee": "Haris Hukic",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-103",
+      "summary": "(BE) Ervaringsverhalen - overzichtspagina en detailpagina",
+      "status": "Reopened",
+      "assignee": "Haris Hukic",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-93",
+      "summary": "Nieuws alert element",
+      "status": "Reopened",
+      "assignee": "Bart van Elferen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-94",
+      "summary": "Accordeon",
+      "status": "In Review",
       "assignee": "Gijsbert van Everdingen",
       "priority": "Minor",
       "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-78",
+      "summary": "Speerpunten element",
+      "status": "In Review",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-84",
+      "summary": "USP element",
+      "status": "In Review",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-95",
+      "summary": "Onze locaties element",
+      "status": "In Review",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-96",
+      "summary": "Gerelateerde onderwerpen",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-104",
+      "summary": "(FE) Ervaringsverhalen - overzichtpagina en detailpagina",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-80",
+      "summary": "(FE) Uitgelicht project element",
+      "status": "In Review",
+      "assignee": "Gijsbert van Everdingen",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-131",
+      "summary": "Build sync (hhnk)",
+      "status": "In Progress",
+      "assignee": "Haris Hukic",
+      "priority": "Minor",
+      "type": "Sub-task",
+      "project": "GMBDEV"
+    },
+    {
+      "key": "GMBDEV-134",
+      "summary": "Configure index with new propertyies from vacancy detail page",
+      "status": "In Progress",
+      "assignee": "Haris Hukic",
+      "priority": "Minor",
+      "type": "Sub-task",
       "project": "GMBDEV"
     },
     {
@@ -119,24 +236,6 @@
       "project": "GMBDEV"
     },
     {
-      "key": "GMBDEV-110",
-      "summary": "BE - Koppeling Recruitee",
-      "status": "In Progress",
-      "assignee": "Haris Hukic",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-95",
-      "summary": "Onze locaties element",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
       "key": "GMBDEV-128",
       "summary": "Hangfire setup (based on wbrvn/slo)",
       "status": "In Progress",
@@ -146,46 +245,10 @@
       "project": "GMBDEV"
     },
     {
-      "key": "GMBDEV-78",
-      "summary": "Speerpunten element",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-88",
-      "summary": "(BE) Tijdlijn element",
-      "status": "Ready for Test",
-      "assignee": "Haris Hukic",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
       "key": "GMBDEV-122",
       "summary": "WerkenBij omgeving aanmaken",
       "status": "To Do",
       "assignee": "Maikey Sip",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-103",
-      "summary": "(BE) Ervaringsverhalen - overzichtspagina en detailpagina",
-      "status": "Ready for Test",
-      "assignee": "Haris Hukic",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-134",
-      "summary": "Configure index with new propertyies from vacancy detail page",
-      "status": "Ready for Refinement",
-      "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Sub-task",
       "project": "GMBDEV"
@@ -200,126 +263,9 @@
       "project": "GMBDEV"
     },
     {
-      "key": "GMBDEV-132",
-      "summary": "Build baisc api with sort / filter (hhnk)",
-      "status": "Ready for Refinement",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-131",
-      "summary": "Build sync (hhnk)",
-      "status": "Ready for Refinement",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-80",
-      "summary": "(FE) Uitgelicht project element",
-      "status": "To Do",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-84",
-      "summary": "USP element",
-      "status": "To Do",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-89",
-      "summary": "(FE) Tijdlijn element",
-      "status": "To Do",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-93",
-      "summary": "Nieuws alert element",
-      "status": "To Do",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-94",
-      "summary": "Accordeon",
-      "status": "To Do",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-96",
-      "summary": "Gerelateerde onderwerpen",
-      "status": "To Do",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-102",
-      "summary": "Galerij element",
-      "status": "To Do",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-104",
-      "summary": "(FE) Ervaringsverhalen - overzichtpagina en detailpagina",
-      "status": "To Do",
-      "assignee": "Gijsbert van Everdingen",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-86",
-      "summary": "(BE) Direct contact element",
-      "status": "Ready for Test",
-      "assignee": "Haris Hukic",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
       "key": "GMBDEV-83",
       "summary": "Rich Text element",
       "status": "In Progress",
-      "assignee": "Haris Hukic",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-79",
-      "summary": "(BE) Uitgelicht project element",
-      "status": "Ready for Test",
-      "assignee": "Haris Hukic",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
-      "key": "GMBDEV-76",
-      "summary": "(BE) Verwijzing element (toptaken)",
-      "status": "Ready for Test",
       "assignee": "Haris Hukic",
       "priority": "Minor",
       "type": "Story",
@@ -380,15 +326,6 @@
       "project": "GMBDEV"
     },
     {
-      "key": "GMBDEV-68",
-      "summary": "Zoekpagina",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "GMBDEV"
-    },
-    {
       "key": "GMBDEV-106",
       "summary": "Back-end",
       "status": "In Progress",
@@ -398,19 +335,19 @@
       "project": "GMBDEV"
     },
     {
-      "key": "GMBDEV-105",
-      "summary": "Front-end",
-      "status": "In Progress",
-      "assignee": "Gijsbert van Everdingen",
+      "key": "GMBDEV-109",
+      "summary": "Werkzaamheden SanFran",
+      "status": "Ready for Refinement",
+      "assignee": "Unassigned",
       "priority": "Minor",
-      "type": "Sub-task",
+      "type": "Reservation",
       "project": "GMBDEV"
     },
     {
       "key": "HWB-156",
       "summary": "Kwaliteit afbeeldingen verhogen",
       "status": "Ready for Test",
-      "assignee": "Sebastiaan Steenbrink",
+      "assignee": "Sjoerd de Wildt",
       "priority": "Minor",
       "type": "Story",
       "project": "HWB"
@@ -418,8 +355,8 @@
     {
       "key": "HWB-155",
       "summary": "Vacatures sorteren op publicatiedatum (nieuw → oud)",
-      "status": "To Do",
-      "assignee": "Unassigned",
+      "status": "In Progress",
+      "assignee": "Sebastiaan Steenbrink",
       "priority": "Minor",
       "type": "Story",
       "project": "HWB"
@@ -427,11 +364,20 @@
     {
       "key": "HWB-150",
       "summary": "Toegankelijkheidsicoon en animatieknop toevoegen in footer",
-      "status": "In Progress",
-      "assignee": "Gijsbert van Everdingen",
+      "status": "Ready for Test",
+      "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Story",
       "project": "HWB"
+    },
+    {
+      "key": "SLODEV-378",
+      "summary": "Feedback: Inhoud downloadoverzicht klopt niet",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SLODEV"
     },
     {
       "key": "SLODEV-396",
@@ -443,18 +389,27 @@
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-384",
-      "summary": "Call to action blok uitbreiden met shared content optie",
-      "status": "To Do",
+      "key": "SLODEV-383",
+      "summary": "18.3 Mailchimp formulier embedden via content element",
+      "status": "Reopened",
       "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Story",
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-383",
-      "summary": "18.3 Mailchimp formulier embedden via content element",
-      "status": "Reopened",
+      "key": "SLODEV-377",
+      "summary": "Feedback sprint #1 2026",
+      "status": "To Do",
+      "assignee": "Unassigned",
+      "priority": "Minor",
+      "type": "Task",
+      "project": "SLODEV"
+    },
+    {
+      "key": "SLODEV-384",
+      "summary": "Call to action blok uitbreiden met shared content optie",
+      "status": "To Do",
       "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Story",
@@ -470,15 +425,6 @@
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-378",
-      "summary": "Feedback: Inhoud downloadoverzicht klopt niet",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Task",
-      "project": "SLODEV"
-    },
-    {
       "key": "SLODEV-382",
       "summary": "Nieuws en inspiratie component ook per leergebied tonen",
       "status": "To Do",
@@ -488,39 +434,12 @@
       "project": "SLODEV"
     },
     {
-      "key": "SLODEV-381",
-      "summary": "Leergebied pagina's zijn niet vindbaar in zoekpagina",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
-      "project": "SLODEV"
-    },
-    {
-      "key": "SLODEV-377",
-      "summary": "Feedback sprint #1",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Task",
-      "project": "SLODEV"
-    },
-    {
       "key": "SLOONT-11",
       "summary": "Feedback formulieren",
       "status": "To Do",
       "assignee": "Unassigned",
       "priority": "Minor",
       "type": "Task",
-      "project": "SLOONT"
-    },
-    {
-      "key": "SLOONT-13",
-      "summary": "Afbeelding voor bedankt formulier niet verplicht maken",
-      "status": "Ready for Test",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Sub-task",
       "project": "SLOONT"
     },
     {
@@ -535,6 +454,42 @@
     {
       "key": "SNDEV-32",
       "summary": "Login functionaliteit",
+      "status": "Reopened",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-34",
+      "summary": "Wachtwoord vergeten",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-33",
+      "summary": "Account aanmaken ",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-38",
+      "summary": "CMS training",
+      "status": "Ready for Test",
+      "assignee": "Sebastiaan Steenbrink",
+      "priority": "Minor",
+      "type": "Story",
+      "project": "SNDEV"
+    },
+    {
+      "key": "SNDEV-35",
+      "summary": "Beheren van profielen",
       "status": "In Progress",
       "assignee": "Sebastiaan Steenbrink",
       "priority": "Minor",
@@ -548,42 +503,6 @@
       "assignee": "Sebastiaan Steenbrink",
       "priority": "Minor",
       "type": "Task",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-38",
-      "summary": "CMS training",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-35",
-      "summary": "Beheren van profielen",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-34",
-      "summary": "Wachtwoord vergeten",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
-      "project": "SNDEV"
-    },
-    {
-      "key": "SNDEV-33",
-      "summary": "Account aanmaken ",
-      "status": "To Do",
-      "assignee": "Unassigned",
-      "priority": "Minor",
-      "type": "Story",
       "project": "SNDEV"
     },
     {
@@ -606,25 +525,30 @@
     }
   ],
   "statsByProject": {
-    "GMBDEV": 45,
+    "AS": 1,
+    "GMBDEV": 37,
     "HWB": 3,
-    "SLODEV": 8,
-    "SLOONT": 3,
+    "SLODEV": 7,
+    "SLOONT": 2,
     "SNDEV": 8
   },
   "statsByStatus": {
-    "In Progress": 14,
-    "In Review": 8,
-    "To Do": 25,
+    "In Progress": 18,
     "Ready for Test": 9,
-    "Ready for Refinement": 6,
-    "Reopened": 5
+    "In Review": 7,
+    "Reopened": 9,
+    "To Do": 11,
+    "Ready for Refinement": 4
   },
   "statsByAssignee": {
-    "Gijsbert van Everdingen": 21,
+    "Davey Forkin": 1,
+    "Gijsbert van Everdingen": 10,
     "Haris Hukic": 11,
-    "Unassigned": 27,
+    "Unassigned": 21,
+    "Vladimir Bratukhin": 1,
+    "Bart van Elferen": 1,
     "Maikey Sip": 1,
-    "Sebastiaan Steenbrink": 7
+    "Sebastiaan Steenbrink": 11,
+    "Sjoerd de Wildt": 1
   }
 }

@@ -217,11 +217,12 @@ class ProcessManager {
     // Notify Teams channel on notable status changes
     if (status === 'errored' || status === 'running' || status === 'stopped') {
       const cfg = readConfig();
-      if (cfg.teamsWebhookUrl) {
+      const statusWebhook = cfg.teamsWebhooks?.['status'] ?? cfg.teamsWebhookUrl;
+      if (statusWebhook) {
         const icons: Record<string, string> = { running: '🟢', stopped: '⚪', errored: '🔴' };
         const colors: Record<string, string> = { running: '00B300', stopped: '808080', errored: 'CC0000' };
         const accentColor = colors[status] ?? '808080';
-        fetch(cfg.teamsWebhookUrl, {
+        fetch(statusWebhook, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
